@@ -110,7 +110,7 @@ export const selectStyle = {
   },
 };
 
-const versions = ["P 3.9", "P 3.1", "P 2.6", "P 2.9"];
+const versions = ["P 3.9", "P 3.1", "P 2.6", "P 2.7"];
 const units = [
   { name: "Feet(FT)", unit: "FT" },
   { name: "Meter(M)", unit: "M" },
@@ -126,11 +126,16 @@ const panelArray = [
   [true, true, true, true, true, true, true, true, true, true],
 ];
 
-function Panel() {
+function Panel({parentId,panelid,setp}) {
   const initialHorizontal = localStorage.getItem("Horizontal");
   const componentRef = useRef();
 
-  const { Id } = useParams();
+  let { Id } = useParams();
+
+  if (panelid) {
+    Id = panelid;
+  }
+
   const navigate = useNavigate();
   const initialLoad = useRef(true);
   const [title, setTitle] = useState("CLICK HERE TO ADD PROJECT TITLE");
@@ -154,12 +159,17 @@ function Panel() {
   const [logo, setLogo] = useState("/logoPanel.png");
   const [showCopyright, setShowCopyright] = useState(false);
 
+  const [panelIds, setPanelIds] = useState([]);
+
+
   const screenWidth = window.innerWidth / 2;
   const screenHeight = window.innerHeight / 2;
 
   const screenCheck = window.innerWidth;
 
-  const baseURL = "https://api.screencalculator.in";
+  // const baseURL = "https://api.screencalculator.in";
+  const baseURL ="http://localhost:4000"
+
 
   async function getData(
     ratio1,
@@ -195,6 +205,8 @@ function Panel() {
         panelMatrix: panels1,
         activePanel: activePanel1,
         screenName: screenName1,
+        parentId: parentId
+      
       });
 
       //   Avoid updating ratio and unit unless they differ from the current state
@@ -223,6 +235,13 @@ function Panel() {
         setId(Id);
         navigate(`/${Id}`);
       } else if (response.data.id) {
+        
+        if(parentId){
+
+          if (!panelIds.includes(response.data.id)) {
+            setp([...panelIds, response.data.id]);
+          }
+        }
         setId(response.data.id);
         navigate(`/${response.data.id}`);
       }
@@ -269,6 +288,10 @@ function Panel() {
 
           setPanels(response.data.panelMatrix);
 
+          if(!parentId){ 
+            setPanelIds(response.data.children);
+          }
+
           setRatio(response.data.ratio);
           const updatedUnit = units.filter(
             (data) => data.unit === response.data.unit
@@ -307,6 +330,8 @@ function Panel() {
         }
       } else {
         try {
+
+          console.log("postinnnggggg", id);
           const response = await axios.post(baseURL, {
             product: 500,
             unit: unit.unit,
@@ -318,6 +343,8 @@ function Panel() {
             product: type ? type : "p 3.9",
             panelMatrix: panels,
             screenName: screenName,
+            parentId: parentId
+
           });
           console.log(response.data);
           setPanelsX(response.data.panelsX);
@@ -341,7 +368,12 @@ function Panel() {
           if (initialLoad.current && Id) {
             setId(Id);
             navigate(`/${Id}`);
-          } else if (response.data.id) {
+          }else if (response.data.id) {
+             if(parentId){
+              if (!panelIds.includes(response.data.id)) {
+                setp([...panelIds, response.data.id]);
+              }
+            }
             setId(response.data.id);
             navigate(`/${response.data.id}`);
           }
@@ -546,6 +578,7 @@ function Panel() {
     );
   };
 
+
   const handleRefresh = () => {
     navigate(`/`);
     window.location.reload();
@@ -554,32 +587,40 @@ function Panel() {
 
   const handlePrint = async () => {
     const element = componentRef.current;
-
-    // Use html2canvas to capture the element with a higher scale for better quality
+  
+    // Capture the element as a canvas
     const canvas = await html2canvas(element, {
-      scale: 2, // Increase the scale for better quality
-      useCORS: true, // Helps with loading external images if you have any
+      scale: 2, // Increase the scale for better quality (adjust as needed)
+      useCORS: true, // Helps with loading external images
     });
-
-    // Get the actual content height and width from the canvas (without extra whitespace)
+  
+    // Get the full content width and height
     const contentWidth = element.scrollWidth;
     const contentHeight = element.scrollHeight;
-
-    // Create a new jsPDF instance with the dynamic height and width based on content
-    const pdf = new jsPDF(window.innerWidth < 900 ? "p" : "1", "pt", [
-      contentWidth,
-      contentHeight,
-    ]);
-
-    // Calculate the appropriate scale for the content to fit properly
+  
+    // Create a new jsPDF instance with landscape orientation and A4 size
+    const pdf = new jsPDF("l", "pt", "a4");
     const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (contentHeight * pdfWidth) / contentWidth;
-
-    // Add the canvas image to the PDF, using calculated dimensions
-    const imageData = canvas.toDataURL("image/png");
-    pdf.addImage(imageData, "PNG", 0, 0, pdfWidth, pdfHeight);
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+  
+    // Calculate scaling to fit content into the page dimensions
+    const scaleFactor = Math.min(pdfWidth / contentWidth, pdfHeight / contentHeight);
+    const scaledWidth = contentWidth * scaleFactor;
+    const scaledHeight = contentHeight * scaleFactor;
+  
+    // Convert the canvas to an image
+    const imageData = canvas.toDataURL("image/jpeg", 0.8); // JPEG format with compression
+  
+    // Add the image to the PDF with scaled dimensions
+    const offsetX = (pdfWidth - scaledWidth) / 2; // Center horizontally
+    const offsetY = (pdfHeight - scaledHeight) / 2; // Center vertically
+    pdf.addImage(imageData, "JPEG", offsetX, offsetY, scaledWidth, scaledHeight);
+  
+    // Save the PDF
     pdf.save(`${title}.pdf`);
   };
+  
+  
 
   const handleCopyLink = () => {
     navigator.clipboard
@@ -613,6 +654,8 @@ function Panel() {
     )}`;
     window.location.href = mailtoLink;
   };
+
+ 
 
   return (
     <div>
@@ -1043,7 +1086,8 @@ function Panel() {
                           value={screenName}
                           sx={{ width: "100%", textAlign: "center" }}
                           variant="standard"
-                          onChange={(e) => setScreenName(e.target.value)}
+                          onChange={(e) => setScreenName(e.target.value) }
+                          onBlur={handleNameChange}
                         />{" "}
                         <IconButton onClick={handleNameChange}>
                           <SaveIcon />
@@ -1133,6 +1177,7 @@ function Panel() {
                         sx={{ width: "100%", textAlign: "center" }}
                         variant="standard"
                         onChange={(e) => setScreenName(e.target.value)}
+                        onBlur={handleNameChange}
                       />{" "}
                       <IconButton onClick={handleNameChange}>
                         <SaveIcon />
@@ -1380,9 +1425,9 @@ function Panel() {
           </Grid>
         </Grid>
         <Box display={"flex"} alignItems={"center"} pb={1} px={2}>
-          {showCopyright && (
-            <Typography>© 2024 Green Media. All rights reserved.</Typography>
-          )}
+          <Typography>
+            © 2024 <a href="https://greenmedia.co" target="_blank" rel="noopener noreferrer">greenmedia.co</a>. All rights reserved.
+          </Typography>
         </Box>
       </div>
 
@@ -1401,19 +1446,16 @@ function Panel() {
             onChange={handleUploadLogo}
           />
         </Button>
-      </Box>
-      <Box mt={2} display="flex" justifyContent="center">
-        <FormControlLabel
-          control={
-            <Checkbox
-              onChange={(e) => {
-                setShowCopyright(e.target.checked);
-              }}
-            />
-          }
-          label="Show copyright"
-        />
-      </Box>
+        
+        {!parentId && panelIds.map((panelId,i) => (
+          <Panel key={i}  panelid={panelId} parentId={id} />
+        ))}
+
+        
+        </Box>
+        {  !parentId &&      <button onClick={() => setPanelIds([...panelIds, ``])}>
+                Create New
+              </button>}
     </div>
   );
 }

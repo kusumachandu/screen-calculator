@@ -16,7 +16,7 @@ import Panel from "./Panel";
         <Route path="/:Id" element={<Panel />} />
         {/* <Route path="/page" element={<Page />} /> */}
  
-      </Routes>
+      </Routes> 
     </Router>
   );
 }

@@ -23,7 +23,7 @@ function calculateDimensions(input) {
     verticalF,
     feetPanelSize;
   let panelsX, panelsY, totalPanels;
-  4;
+
 
   const {
     product,
@@ -72,7 +72,9 @@ function calculateDimensions(input) {
     weight = 7;
     portPixel = 650000;
     power = 120;
-  } else if (product === "P 2.9") {
+  } else if (product === "P 2.7") {
+
+    console.log("sdsdsd");
     widthF = 2;
     heightF = 2;
     meter = 0.609;
@@ -221,7 +223,9 @@ app.post("/", async (req, res) => {
     panelMatrix,
     activePanel,
     screenName,
+    parentId,
   } = req.body;
+
   console.log("PanelMatrix", panelMatrix);
   let uniqueId = id;
 
@@ -238,6 +242,8 @@ app.post("/", async (req, res) => {
       screenName: screenName,
     });
     uniqueId = newRecord._id;
+
+    console.log("New Record", newRecord.uniqueId);
   }
 
   // Immediately calculate dimensions and respond to the client
@@ -265,6 +271,7 @@ app.post("/", async (req, res) => {
   (async () => {
     try {
       if (id) {
+        // Find and update the existing record
         const dimensionRecord = await Dimension.findOne({
           _id: new mongoose.Types.ObjectId(id),
         });
@@ -282,11 +289,29 @@ app.post("/", async (req, res) => {
           await dimensionRecord.save();
         }
       }
+
+      if (parentId) {
+        // Find the parent dimension and update its children
+        const parentRecord = await Dimension.findOne({
+          _id: new mongoose.Types.ObjectId(parentId),
+        });
+
+        if (parentRecord) {
+          // Ensure `children` is initialized as an array if not already
+          parentRecord.children = parentRecord.children || [];
+          if (!parentRecord.children.includes(uniqueId.toString())) {
+            parentRecord.children.push(uniqueId.toString());
+          }
+          await parentRecord.save();
+        }
+      }
     } catch (error) {
       console.error("Error updating database:", error);
     }
   })();
 });
+
+
 
 app.get("/:id", async (req, res) => {
   const { id } = req.params;
@@ -302,6 +327,7 @@ app.get("/:id", async (req, res) => {
     title: data?.title,
     panelMatrix: data.panelMatrix,
     screenName: data?.screenName,
+    children: data?.children,
   });
 });
 

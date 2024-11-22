@@ -32,7 +32,8 @@ const dimensionSchema = new mongoose.Schema({
     vertical: { type: Number, required: false },
     title: { type: String, required: false },
     panelMatrix: { type: Array, required: false },
-    screenName: { type: String, required: false }
+    screenName: { type: String, required: false },
+    children: {type: Array, required: false}
 });
   
 export  const Dimension = mongoose.model("Dimension", dimensionSchema);
