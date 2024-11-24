@@ -171,9 +171,23 @@ function calculateDimensions(input) {
   const totalAMPS = activePanel
     ? `${activePanel * power} W`
     : `${totalPanels * power} W`;
-  const totalAMPSkW = activePanel
-    ? `${((activePanel * power) / 1000).toFixed(2)} kW`
-    : `${((totalPanels * power) / 1000).toFixed(2)} kW`;
+
+  let totalAMPSkW;
+
+
+if (product === "P 2.7") {
+  // For P 2.7, apply a different calculation for voltage if required.
+  // You need to replace this with the actual voltage calculation for P 2.7
+  totalAMPSkW = activePanel
+    ? `${(activePanel * power )/ 1000} KV` // Example calculation (this can be adjusted as needed)
+    : `${(totalPanels * power )/ 1000} KV`; // Adjust calculation for total panels if necessary
+} else {
+  // For all other products, the voltage is just the power (since 1A current is assumed).
+  totalAMPSkW = activePanel
+    ? `${(activePanel * power)/ 1000} KV`
+    : `${(totalPanels * power)/ 1000} KV`;
+}
+
 
   horizontal = unit === "M" ? `${horizontal} M` : `${horizontal} FT`;
 
