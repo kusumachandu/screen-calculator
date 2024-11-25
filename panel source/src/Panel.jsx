@@ -166,8 +166,8 @@ function Panel({ parentId, panelid, setp }) {
 
   const screenCheck = window.innerWidth;
 
-  // const baseURL = "https://api.screencalculator.in";
-  const baseURL = "http://localhost:4000";
+  const baseURL = "https://api.screencalculator.in";
+ // const baseURL = "http://localhost:4000";
 
   async function getData(
     ratio1,
