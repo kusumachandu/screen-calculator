@@ -83,7 +83,7 @@ const PanelFormMobile = ({
             <React.Fragment key={sectionIndex}>
               {/* Product Type */}
               <p>
-                {section.screenName} - {sectionIndex + 1}
+                {section.screenName || "panel"} - {sectionIndex + 1}
               </p>
               <Grid size={{ md: 2.4, xs: 12 }}>
                 <Box>
