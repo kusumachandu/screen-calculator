@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 
 const MONGO_URI = "mongodb+srv://vaishakhp11:0YW7eFtnZUphtn2i@cluster0.bne4y.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
+// const MONGO_URI = 'mongodb://localhost:27017/'
+
 export const DB = () => {
     mongoose
   .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -24,16 +26,36 @@ const MatrixLayoutSchema = new mongoose.Schema({
 const MatrixLayout = mongoose.model("MatrixLayout", MatrixLayoutSchema);
 export default MatrixLayout;
 
-const dimensionSchema = new mongoose.Schema({
-    product: { type: String, required: false },
-    unit: { type: String, required: false },
-    ratio: { type: String, required: false },
-    horizontal: { type: Number, required: false },
-    vertical: { type: Number, required: false },
-    title: { type: String, required: false },
-    panelMatrix: { type: Array, required: false },
-    screenName: { type: String, required: false },
-    children: {type: Array, required: false}
-});
+// const dimensionSchema = new mongoose.Schema({
+//     product: { type: String, required: false },
+//     unit: { type: String, required: false },
+//     ratio: { type: String, required: false },
+//     horizontal: { type: Number, required: false },
+//     vertical: { type: Number, required: false },
+//     title: { type: String, required: false },
+//     panelMatrix: { type: Array, required: false },
+//     screenName: { type: String, required: false },
+//     children: {type: Array, required: false}
+// });
   
-export  const Dimension = mongoose.model("Dimension", dimensionSchema);
+// export  const Dimension = mongoose.model("Dimension", dimensionSchema);
+
+
+const sectionSchema = new mongoose.Schema({
+  product: { type: String, required: false },
+  unit: { type: String, required: true },
+  ratio: { type: String, required: false },
+  horizontal: { type: Number, required: false },
+  vertical: { type: Number, required: false },
+  panelMatrix: { type: Array, required: false },
+  screenName: { type: String, required: false },
+});
+
+const dimensionSchema = new mongoose.Schema({
+  title: { type: String, required: false },
+  sections: { type: [sectionSchema], required: false },
+  children: { type: Array, required: false },
+});
+
+export const Dimension = mongoose.model("Dimension", dimensionSchema);
+

@@ -24,7 +24,8 @@ function calculateDimensions(input) {
     feetPanelSize;
   let panelsX, panelsY, totalPanels;
 
-
+  
+  
   const {
     product,
     unit,
@@ -33,9 +34,17 @@ function calculateDimensions(input) {
     vertical: inputVertical,
     activePanel,
   } = input;
+  
+  const horizontalValue = parseFloat(inputHorizontal) || 0;
+const verticalValue = parseFloat(inputVertical) || 0;
 
-  const horizontalValue = parseFloat(inputHorizontal);
-  const verticalValue = parseFloat(inputVertical);
+if (!horizontalValue || !verticalValue) {
+  console.error("Horizontal or vertical values are invalid:", {
+    horizontalValue,
+    verticalValue,
+  });
+}
+
 
   let pixelHeight;
   let pixelWidth;
@@ -73,8 +82,6 @@ function calculateDimensions(input) {
     portPixel = 650000;
     power = 120;
   } else if (product === "P 2.7") {
-
-    console.log("sdsdsd");
     widthF = 2;
     heightF = 2;
     meter = 0.609;
@@ -110,7 +117,6 @@ function calculateDimensions(input) {
       horizontalF = (horizontal * panelSize) / meter;
     } else if (unit === "M") {
       horizontalF = (horizontal * feetPanelSize) / meter;
-      console.log("horizontalF>>>>>>>>>>>>>>>", horizontalF);
     }
 
     switch (ratio) {
@@ -148,7 +154,9 @@ function calculateDimensions(input) {
   }
 
   panelsX = Math.round(horizontal / panelSize);
+  input.panelX = Math.round(horizontal / panelSize)
   panelsY = Math.round(vertical / panelSize);
+  input.panelY = Math.round(vertical / panelSize);
   totalPanels = Math.round(panelsX * panelsY);
 
   const totalPixels = activePanel
@@ -195,7 +203,7 @@ if (product === "P 2.7") {
 
   horizontalM = `${Math.round(horizontalM)} M`;
   verticalM = `${Math.round(verticalM)} M`;
-
+  
   horizontalF = `${parseFloat(horizontalF).toFixed(2)} FT`;
   verticalF = `${parseFloat(verticalF).toFixed(2)} FT`;
 
@@ -204,6 +212,8 @@ if (product === "P 2.7") {
     vertical: vertical,
     panelsX: panelsX,
     panelsY: panelsY,
+    panelX: input.panelX,
+    panelY: input.panelY,
     totalPanels: activePanel || totalPanels,
     totalPixels: totalPixels,
     pixelHeight: pixelHeight * panelsY,
@@ -217,101 +227,117 @@ if (product === "P 2.7") {
     verticalM: verticalM,
     horizontalF: horizontalF,
     verticalF: verticalF,
+    panelSize: 5,
   };
 }
 
 function roundToPanelSize(value, panelSize) {
-  console.log("width::", value, panelSize, (value / panelSize) * panelSize);
   return parseFloat(Math.round(value / panelSize) * panelSize).toFixed(2);
 }
 
 app.post("/", async (req, res) => {
-  const {
-    product,
-    unit,
-    ratio,
-    horizontal,
-    vertical,
-    id,
-    title,
-    panelMatrix,
-    activePanel,
-    screenName,
-    parentId,
-  } = req.body;
+  const { title, sections, id, parentId } = req.body;
 
-  console.log("PanelMatrix", panelMatrix);
+  console.log(req.body, "body from the clinet")
+
   let uniqueId = id;
 
   if (!id) {
-    // Create and save a new record immediately to ensure consistency
+    // Create and save a new record
     const newRecord = await Dimension.create({
-      product,
-      unit,
-      ratio,
-      horizontal,
-      vertical,
       title,
-      panelMatrix: panelMatrix,
-      screenName: screenName,
+      sections,
+      children: [],
     });
     uniqueId = newRecord._id;
-
-    console.log("New Record", newRecord.uniqueId);
   }
 
-  // Immediately calculate dimensions and respond to the client
-  const dimensions = calculateDimensions({
-    product,
-    unit,
-    ratio,
-    horizontal,
-    vertical,
-    activePanel,
+  // Calculate dimensions for each section
+  const updatedSections = sections?.map((section) => {
+    if (!section.horizontal || !section.vertical) {
+      return { ...section, error: "Invalid dimensions" };
+    } 
+    const dimensions = calculateDimensions({
+      product: section.product,
+      unit: section.unit,
+      ratio: section.ratio,
+      horizontal: section.horizontal,
+      vertical: section.vertical,
+      activePanel: section.activePanel,
+    });
+    return {
+      ...section,
+      ...dimensions,
+    };
   });
 
   res.status(200).json({
-    ...dimensions,
     id: uniqueId,
-    title: title,
-    product,
-    unit,
-    ratio,
-    panelMatrix,
-    screenName: screenName,
+    title,
+    sections: updatedSections,
   });
 
-  // Perform MongoDB actions asynchronously in the background
+  // MongoDB operations performed asynchronously
   (async () => {
     try {
       if (id) {
-        // Find and update the existing record
         const dimensionRecord = await Dimension.findOne({
           _id: new mongoose.Types.ObjectId(id),
         });
-        console.log(id, dimensionRecord);
+        console.log(dimensionRecord, "parent record in the databse")
         if (dimensionRecord) {
-          dimensionRecord.product = product;
-          dimensionRecord.unit = unit;
-          dimensionRecord.ratio = ratio;
-          dimensionRecord.horizontal = horizontal;
-          dimensionRecord.vertical = vertical;
+          // Merge sections from database and request body
+          const updatedSections = sections.map((section, index) => {
+            if (dimensionRecord.sections[index]) {
+              // Update existing section
+              return {
+                ...dimensionRecord.sections[index], // Existing section data
+                product: section.product,
+                unit: section.unit,
+                ratio: section.ratio,
+                horizontal: section.horizontal,
+                vertical: section.vertical,
+                panelMatrix: section.panelMatrix,
+                screenName: section.screenName,
+              };
+            } else {
+              // Add new section if it doesn't exist in the database
+              return {
+                ...section,
+              };
+            }
+          });
+
           dimensionRecord.title = title;
-          dimensionRecord.panelMatrix =
-            panelMatrix || dimensionRecord.panelMatrix;
-          dimensionRecord.screenName = screenName || dimensionRecord.screenName;
-          await dimensionRecord.save();
+          dimensionRecord.sections = updatedSections;
+      
+          
+          try {
+            await dimensionRecord.save();
+          } catch (error) {
+            console.error("Error saving record:", error);
+          }
+        }
+      } else {
+        try {
+          const newRecord = await Dimension.create({
+            _id: new mongoose.Types.ObjectId(id), // Ensure the new document uses the provided ID
+            title,
+            sections,
+            children: [], // Initialize with an empty children array
+          });
+        } catch (error) {
+          console.error("Error creating new record:", error);
         }
       }
 
       if (parentId) {
-        // Find the parent dimension and update its children
         const parentRecord = await Dimension.findOne({
           _id: new mongoose.Types.ObjectId(parentId),
         });
 
+
         if (parentRecord) {
-          // Ensure `children` is initialized as an array if not already
           parentRecord.children = parentRecord.children || [];
           if (!parentRecord.children.includes(uniqueId.toString())) {
             parentRecord.children.push(uniqueId.toString());
@@ -325,25 +351,134 @@ app.post("/", async (req, res) => {
   })();
 });
 
+// app.get("/:id", async (req, res) => {
+//   const { id } = req.params;
+//   console.log("Fetching data for ID:", id);
+
+//   try {
+//     const data = await Dimension.findById(id);
+//     if (!data) {
+//       return res.status(404).json({ message: "Record not found" });
+//     }
+
+//     const updatedSections = data?.sections?.map((section) => {
+
+//       console.log(section, "before the calculation")
+//       if (!section.horizontal || !section.vertical) {
+//         console.error("Missing horizontal or vertical in section:", section);
+//         return { ...section, error: "Invalid dimensions" };
+//       } 
+//       const dimensions = calculateDimensions({
+//         product: section.product,
+//         unit: section.unit,
+//         ratio: section.ratio,
+//         horizontal: section.horizontal,
+//         vertical: section.vertical,
+//         activePanel: section.activePanel,
+//       });
+//       return {
+//         ...section,
+//         ...dimensions,
+//       };
+//     });
+
+//     console.log(updatedSections, "updated section in get function")
+
+
+//     res.status(200).json({
+//       title: data.title,
+//       sections: updatedSections,
+//       children: data.children || [],
+//     });
+//   } catch (error) {
+//     console.error("Error fetching data:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// });
+
 
 
 app.get("/:id", async (req, res) => {
   const { id } = req.params;
-  console.log(id);
-  const data = await Dimension.findById(id);
-  console.log(data);
-  res.status(200).json({
-    product: data.product,
-    unit: data?.unit,
-    ratio: data?.ratio,
-    horizontal: data?.horizontal,
-    vertical: data?.vertical,
-    title: data?.title,
-    panelMatrix: data.panelMatrix,
-    screenName: data?.screenName,
-    children: data?.children,
-  });
+  console.log("Fetching data for ID:", id);
+
+  try {
+    const data = await Dimension.findById(id);
+    if (!data) {
+      return res.status(404).json({ message: "Record not found" });
+    }
+
+    const updatedSections = data?.sections?.map((section) => {
+      // Log the section for debugging
+      console.log(section, "before the calculation");
+
+      // Check if horizontal and vertical fields exist
+      if (!section.horizontal || !section.vertical) {
+        console.error("Missing horizontal or vertical in section:", section);
+        return { ...section, error: "Invalid dimensions" };
+      }
+
+      // Calculate dimensions
+      const dimensions = calculateDimensions({
+        product: section.product,
+        unit: section.unit,
+        ratio: section.ratio,
+        horizontal: section.horizontal,
+        vertical: section.vertical,
+        activePanel: section.activePanel,
+      });
+
+      // Transform the section to match the desired structure
+      return {
+        product: section.product,
+        unit: section.unit,
+        ratio: section.ratio,
+        horizontal: dimensions.horizontal,
+        vertical: dimensions.vertical,
+        panelMatrix: section.panelMatrix,
+        screenName: section.screenName || "",
+        panelX: dimensions.panelsX || 0,
+        panelY: dimensions.panelsY || 0,
+        activePanel: dimensions.activePanel || false,
+        panelSize: dimensions.panelSize || 0,
+        panelsX: dimensions.panelsX || 0,
+        panelsY: dimensions.panelsY || 0,
+        totalPanels: dimensions.totalPanels || 0,
+        totalPixels: dimensions.totalPixels || 0,
+        pixelHeight: dimensions.pixelHeight || 0,
+        pixelWidth: dimensions.pixelWidth || 0,
+        totalWeight: dimensions.totalWeight || "0 KG",
+        diagonal: dimensions.diagonal || "0",
+        processorPorts: dimensions.processorPorts || 0,
+        totalAMPS: dimensions.totalAMPS || "0 W",
+        totalAMPSkW: dimensions.totalAMPSkW || "0 KV",
+        horizontalM: dimensions.horizontalM || "0 M",
+        verticalM: dimensions.verticalM || "0 M",
+        horizontalF: dimensions.horizontalF,
+        verticalF: dimensions.verticalF,
+      };
+    });
+
+    // Prepare the final response structure
+
+    console.log(updatedSections, "updatedsections before the response")
+    const response = {
+      id: data._id,
+      title: data.title,
+      sections: updatedSections,
+      children: data.children || [],
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
+
+
+
+
 
 app.listen(port, () => {
   console.log("Server listening to localhost", port);
