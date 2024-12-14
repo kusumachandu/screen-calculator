@@ -19,6 +19,9 @@ const UploadButton = ({ handleUploadLogo }) => {
       component="label"
       role={undefined}
       variant="contained"
+      sx={{
+        backgroundColor: "darkslategrey",
+      }}
       tabIndex={-1}
       startIcon={<CloudUploadIcon />}
     >

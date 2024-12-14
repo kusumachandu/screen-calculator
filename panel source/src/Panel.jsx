@@ -349,25 +349,38 @@ export default function Panel({ parentId, panelid, setp }) {
         </Grid>
         <Copyright />
       </div>
-
-      <Box mt={2} display="flex" justifyContent="center" marginBottom={"16px"}>
-        <UploadButton handleUploadLogo={handleUploadLogo} />
-      </Box>
-      <Box mt={"0px"} display={"flex"} justifyContent={"center"}>
-        {!parentId && (
-          <button
-            onClick={handleAddSection}
-            style={{
-              padding: "10px",
-              borderRadius: "4px",
-              border: "none",
-              color: "white",
-              backgroundColor: "orange",
-            }}
-          >
-            Create New
-          </button>
-        )}
+      <Box
+        display={"flex"}
+        alignItems={"center"}
+        width={"100%"}
+        justifyContent={"center"}
+        gap={"32px"}
+      >
+        <Box
+          mt={2}
+          display="flex"
+          justifyContent="center"
+          marginBottom={"16px"}
+        >
+          <UploadButton handleUploadLogo={handleUploadLogo} />
+        </Box>
+        <Box mt={"0px"} display={"flex"} justifyContent={"center"}>
+          {!parentId && (
+            <button
+              onClick={handleAddSection}
+              style={{
+                padding: "10px",
+                borderRadius: "4px",
+                border: "none",
+                color: "white",
+                height: "40px",
+                backgroundColor: "orange",
+              }}
+            >
+              Create New
+            </button>
+          )}
+        </Box>
       </Box>
     </div>
   );
