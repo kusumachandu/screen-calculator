@@ -49,6 +49,7 @@ const sectionSchema = new mongoose.Schema({
   vertical: { type: Number, required: false },
   panelMatrix: { type: Array, required: false },
   screenName: { type: String, required: false },
+  activePanel: { type: Number, required: false },
 });
 
 const dimensionSchema = new mongoose.Schema({

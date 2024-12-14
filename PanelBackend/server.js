@@ -24,7 +24,7 @@ function calculateDimensions(input) {
     feetPanelSize;
   let panelsX, panelsY, totalPanels;
 
-  
+  console.log(input, "input data from the response")
   
   const {
     product,
@@ -36,14 +36,14 @@ function calculateDimensions(input) {
   } = input;
   
   const horizontalValue = parseFloat(inputHorizontal) || 0;
-const verticalValue = parseFloat(inputVertical) || 0;
+  const verticalValue = parseFloat(inputVertical) || 0;
 
-if (!horizontalValue || !verticalValue) {
-  console.error("Horizontal or vertical values are invalid:", {
-    horizontalValue,
-    verticalValue,
-  });
-}
+  if (!horizontalValue || !verticalValue) {
+    console.error("Horizontal or vertical values are invalid:", {
+      horizontalValue,
+      verticalValue,
+    });
+  }
 
 
   let pixelHeight;
@@ -257,6 +257,9 @@ app.post("/", async (req, res) => {
     if (!section.horizontal || !section.vertical) {
       return { ...section, error: "Invalid dimensions" };
     } 
+
+    console.log(section, "section data after the change in panel matrix ")
+
     const dimensions = calculateDimensions({
       product: section.product,
       unit: section.unit,
@@ -265,6 +268,8 @@ app.post("/", async (req, res) => {
       vertical: section.vertical,
       activePanel: section.activePanel,
     });
+
+    console.log(dimensions, "dimensions afte the calculation is done")
     return {
       ...section,
       ...dimensions,
@@ -284,10 +289,10 @@ app.post("/", async (req, res) => {
         const dimensionRecord = await Dimension.findOne({
           _id: new mongoose.Types.ObjectId(id),
         });
-        console.log(dimensionRecord, "parent record in the databse")
         if (dimensionRecord) {
           // Merge sections from database and request body
           const updatedSections = sections.map((section, index) => {
+            console.log(section, "updated sections when we add to database")
             if (dimensionRecord.sections[index]) {
               // Update existing section
               return {
@@ -299,6 +304,7 @@ app.post("/", async (req, res) => {
                 vertical: section.vertical,
                 panelMatrix: section.panelMatrix,
                 screenName: section.screenName,
+                activePanel: section.activePanel
               };
             } else {
               // Add new section if it doesn't exist in the database
@@ -308,9 +314,11 @@ app.post("/", async (req, res) => {
             }
           });
 
+          console.log(updatedSections, "updated section in the create function")
           dimensionRecord.title = title;
           dimensionRecord.sections = updatedSections;
-      
+          
+          console.log(dimensionRecord.sections,"dimensions record when we save")
           
           try {
             await dimensionRecord.save();
@@ -326,6 +334,8 @@ app.post("/", async (req, res) => {
             sections,
             children: [], // Initialize with an empty children array
           });
+
+          res.status(200).json(newRecord);
         } catch (error) {
           console.error("Error creating new record:", error);
         }
@@ -351,56 +361,9 @@ app.post("/", async (req, res) => {
   })();
 });
 
-// app.get("/:id", async (req, res) => {
-//   const { id } = req.params;
-//   console.log("Fetching data for ID:", id);
-
-//   try {
-//     const data = await Dimension.findById(id);
-//     if (!data) {
-//       return res.status(404).json({ message: "Record not found" });
-//     }
-
-//     const updatedSections = data?.sections?.map((section) => {
-
-//       console.log(section, "before the calculation")
-//       if (!section.horizontal || !section.vertical) {
-//         console.error("Missing horizontal or vertical in section:", section);
-//         return { ...section, error: "Invalid dimensions" };
-//       } 
-//       const dimensions = calculateDimensions({
-//         product: section.product,
-//         unit: section.unit,
-//         ratio: section.ratio,
-//         horizontal: section.horizontal,
-//         vertical: section.vertical,
-//         activePanel: section.activePanel,
-//       });
-//       return {
-//         ...section,
-//         ...dimensions,
-//       };
-//     });
-
-//     console.log(updatedSections, "updated section in get function")
-
-
-//     res.status(200).json({
-//       title: data.title,
-//       sections: updatedSections,
-//       children: data.children || [],
-//     });
-//   } catch (error) {
-//     console.error("Error fetching data:", error);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// });
-
-
 
 app.get("/:id", async (req, res) => {
   const { id } = req.params;
-  console.log("Fetching data for ID:", id);
 
   try {
     const data = await Dimension.findById(id);
@@ -409,8 +372,6 @@ app.get("/:id", async (req, res) => {
     }
 
     const updatedSections = data?.sections?.map((section) => {
-      // Log the section for debugging
-      console.log(section, "before the calculation");
 
       // Check if horizontal and vertical fields exist
       if (!section.horizontal || !section.vertical) {
@@ -428,6 +389,7 @@ app.get("/:id", async (req, res) => {
         activePanel: section.activePanel,
       });
 
+      console.log(dimensions, "dimensions in the fetch data")
       // Transform the section to match the desired structure
       return {
         product: section.product,
@@ -439,7 +401,7 @@ app.get("/:id", async (req, res) => {
         screenName: section.screenName || "",
         panelX: dimensions.panelsX || 0,
         panelY: dimensions.panelsY || 0,
-        activePanel: dimensions.activePanel || false,
+        activePanel: dimensions.activePanel || 0,
         panelSize: dimensions.panelSize || 0,
         panelsX: dimensions.panelsX || 0,
         panelsY: dimensions.panelsY || 0,
@@ -459,9 +421,6 @@ app.get("/:id", async (req, res) => {
       };
     });
 
-    // Prepare the final response structure
-
-    console.log(updatedSections, "updatedsections before the response")
     const response = {
       id: data._id,
       title: data.title,

@@ -26,7 +26,6 @@ const PanelDimensionsForm = ({
   section,
   sections,
 }) => {
-  console.log(section, "section in the panel dimension form");
   return (
     <React.Fragment key={sectionIndex}>
       <Box

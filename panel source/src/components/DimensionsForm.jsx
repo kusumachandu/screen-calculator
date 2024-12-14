@@ -24,9 +24,6 @@ const DimensionsForm = ({
   handleVerticalChange,
   sectionIndex,
 }) => {
-  console.log(section.horizontal, "sections in the dimensiosn form");
-  console.log(section.vertical, "sections in the dimensiosn form");
-
   return (
     <Grid
       key={sectionIndex}

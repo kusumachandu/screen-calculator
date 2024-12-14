@@ -41,7 +41,7 @@ export default function Panel({ parentId, panelid, setp }) {
       panelY: 0,
       panelSize: 0,
       screenName: "",
-      activePanel: true,
+      activePanel: 0,
     },
   ]);
 
@@ -119,10 +119,6 @@ export default function Panel({ parentId, panelid, setp }) {
         return updatedSection;
       });
 
-      console.log(
-        updatedSections,
-        "updatedsections after the hand;e function triggers"
-      );
       createPanel(id, title, updatedSections, parentId);
 
       return updatedSections;
@@ -149,6 +145,7 @@ export default function Panel({ parentId, panelid, setp }) {
         panelY: section.panelY,
         screenName: section.screenName,
         panelMatrix: section.panelMatrix,
+        activePanel: section.activePanel,
       };
     });
 
@@ -195,7 +192,6 @@ export default function Panel({ parentId, panelid, setp }) {
     async function fetchData() {
       setIsCreate(false);
       const sendID = Id || id;
-      console.log(sendID, "sne dId data");
 
       try {
         let response;
@@ -204,7 +200,6 @@ export default function Panel({ parentId, panelid, setp }) {
         if (sendID) {
           try {
             response = await axios.get(`${baseURL}/${sendID}`);
-            console.log(response, "Fetched data");
           } catch (fetchError) {
             // If fetching fails (e.g., 404), handle creation
             if (fetchError.response?.status === 404) {
@@ -223,7 +218,6 @@ export default function Panel({ parentId, panelid, setp }) {
             sections,
             parentId,
           });
-          console.log(response, "Created new data");
         }
 
         // Update states with the fetched/created data
@@ -258,8 +252,6 @@ export default function Panel({ parentId, panelid, setp }) {
     createPanel(id, title, sections, parentId);
   };
 
-  console.log(sections);
-
   return (
     <div>
       <div ref={componentRef}>
@@ -276,7 +268,6 @@ export default function Panel({ parentId, panelid, setp }) {
             handleTitleChange={handleTitleChange}
           />
           {sections.map((section, index) => {
-            console.log(section, "section on mapping in jsx");
             return (
               <React.Fragment key={index}>
                 <Box
