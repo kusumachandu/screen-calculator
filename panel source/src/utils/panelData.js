@@ -7,9 +7,7 @@ export const units = [
 export const ratioData = ["16:9", "21:9", "4:3", "custom"];
 
 export const panelArray = [
-  [true, true, true, true, true, true, true, true, true, true],
-  [true, true, true, true, true, true, true, true, true, true],
-  [true, true, true, true, true, true, true, true, true, true],
-  [true, true, true, true, true, true, true, true, true, true],
-  [true, true, true, true, true, true, true, true, true, true],
+  [true, true, true, true, true, true],
+  [true, true, true, true, true, true],
+  [true, true, true, true, true, true],
 ];

@@ -9,7 +9,7 @@ import Header from "./components/Header";
 import Copyright from "./components/CopyRight";
 import UploadButton from "./components/UploadButton";
 import PanelDimensionsForm from "./components/PanelDimensionForm";
-import { panelArray, ratioData, units } from "./utils/panelData";
+import { panelArray, units } from "./utils/panelData";
 import axios from "axios";
 import { updateSectionsWithResponse } from "./utils/panelUpdateSection";
 import { useUpdatePanelMatrix } from "./components/UpdatedPanelMatrix";
@@ -18,7 +18,7 @@ import { togglePanelMatrixValue } from "./utils/togglePanelMatrix";
 import TotalPanels from "./components/TotalPanels";
 import PanelFormMobile from "./components/PanelFormMobile";
 
-export default function Panel({ parentId, panelid, setp }) {
+export default function Panel({ parentId, panelid }) {
   const screenHeight = window.innerHeight / 2;
   const screenCheck = window.innerWidth;
   const componentRef = useRef();
@@ -33,15 +33,15 @@ export default function Panel({ parentId, panelid, setp }) {
     {
       product: "P 3.9",
       unit: units[0].unit,
-      ratio: "custom",
-      horizontal: 0,
-      vertical: 0,
+      ratio: "16:9",
+      horizontal: 10,
+      vertical: 4,
       panelMatrix: panelArray,
-      panelX: 0,
-      panelY: 0,
+      panelX: 6,
+      panelY: 3,
       panelSize: 0,
       screenName: "",
-      activePanel: 0,
+      activePanel: 18,
     },
   ]);
 
