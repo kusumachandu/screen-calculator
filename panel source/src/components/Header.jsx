@@ -145,7 +145,7 @@ const Header = ({
           ) : (
             <Box display={"flex"} mt={{ md: 2, xs: 0 }} width={"50%"} gap={3}>
               <TextField
-                value={title}
+                value={title || ""}
                 sx={{
                   ...textFieldStyle,
                   width: "100%",
@@ -155,6 +155,12 @@ const Header = ({
                 variant="standard"
                 onBlur={handleTitleChange}
                 onChange={(e) => setTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setSsEditTitle(false);
+                    handleTitleChange(title);
+                  }
+                }}
               />
             </Box>
           )}

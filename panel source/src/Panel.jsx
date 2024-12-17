@@ -34,19 +34,19 @@ export default function Panel({ parentId, panelid }) {
       product: "P 3.9",
       unit: units[0].unit,
       ratio: "16:9",
-      horizontal: 10,
+      horizontal: 8,
       vertical: 4,
       panelMatrix: panelArray,
-      panelX: 6,
+      panelX: 5,
       panelY: 3,
       panelSize: 0,
       screenName: "",
-      activePanel: 18,
+      activePanel: 15,
     },
   ]);
 
   const baseURL = "https://api.screencalculator.in";
- // const baseURL = "http://localhost:4000";
+  // const baseURL = "http://localhost:4000";
 
   let { Id } = useParams();
 
@@ -73,18 +73,21 @@ export default function Panel({ parentId, panelid }) {
     setSections((prevSections) => [
       ...prevSections,
       {
-        product: "",
-        unit: "",
-        ratio: "",
-        horizontal: 0,
-        vertical: 0,
+        product: "P 3.9",
+        unit: units[0].unit,
+        ratio: "16:9",
+        horizontal: 8,
+        vertical: 4,
         panelMatrix: panelArray,
-        panelX: 0,
-        panelY: 0,
+        panelX: 5,
+        panelY: 3,
         panelSize: 0,
-        screenName: "",
+        screenName: "Click here to add a screen name",
+        activePanel: 15,
       },
     ]);
+
+    console.log(sections, "after the new section created");
   };
 
   const handleSectionChange = (index, field, value) => {
@@ -226,6 +229,8 @@ export default function Panel({ parentId, panelid }) {
 
         setTitle(data.title);
 
+        console.log(data, "from the fetch function");
+
         await updateSectionsWithResponse(data, setSections, screenHeight);
 
         // Update IDs and navigation
@@ -244,15 +249,16 @@ export default function Panel({ parentId, panelid }) {
     fetchData();
   }, [Id, id]);
 
-  const handleTitleChange = () => {
+  const handleTitleChange = (newTitle) => {
+    setTitle(newTitle);
     if (!title.trim()) {
       toast.error(`Title can't be empty`);
       return;
     }
 
+    console.log(title, sections, "section while changing the title name");
     createPanel(id, title, sections, parentId);
   };
-
   return (
     <div>
       <div ref={componentRef}>
