@@ -24,8 +24,6 @@ export default function PanelPlate({
   parentId,
   title,
 }) {
-  // console.log(panelData, "panel data in the panel plates");
-  // console.log(panels, "panels in the panelPlate");
   const generateBlackNoiseTexture = () => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
@@ -221,6 +219,7 @@ export default function PanelPlate({
                   return (
                     <Box
                       // border={"1px solid grey"}
+                      overflow={"hidden"}
                       key={`${rowIndex}-${colIndex}`}
                       sx={{
                         width: panelSize ? `${panelSize}px` : "50px",
@@ -313,6 +312,12 @@ export default function PanelPlate({
                   variant="standard"
                   onChange={(e) => setScreenName(e.target.value)} // Update `screenName`
                   onBlur={handleNameChange} // Save changes when input loses focus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      setName(false);
+                      handleNameChange;
+                    }
+                  }}
                 />
               </Box>
             )}
