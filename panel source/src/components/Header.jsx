@@ -7,7 +7,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import MenuIcon from "@mui/icons-material/Menu";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { textFieldStyle } from "../utils/panelStyle";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -15,17 +15,40 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 const Header = ({
-  componentRef,
   setSettings,
   showSettings,
   title,
   setTitle,
   handleTitleChange,
+  logo,
 }) => {
-  const [logo, setLogo] = useState("/logoPanel.png");
-  const [isEditTitle, setSsEditTitle] = useState(false);
+  const [isEditTitle, setIsEditTitle] = useState(false);
+  const textFieldRef = useRef(null);
 
   const navigate = useNavigate();
+
+  // Global click listener to update title when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        textFieldRef.current &&
+        !textFieldRef.current.contains(event.target)
+      ) {
+        handleTitleChange(title);
+        setIsEditTitle(false);
+      }
+    };
+
+    if (isEditTitle) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [handleTitleChange, isEditTitle, textFieldRef]);
 
   const handleRefresh = () => {
     navigate(`/`);
@@ -34,48 +57,39 @@ const Header = ({
   };
 
   const handlePrint = async () => {
-    const element = componentRef.current;
-
-    // Capture the element as a canvas
-    const canvas = await html2canvas(element, {
-      scale: 2, // Increase the scale for better quality (adjust as needed)
-      useCORS: true, // Helps with loading external images
-    });
-
-    // Get the full content width and height
-    const contentWidth = element.scrollWidth;
-    const contentHeight = element.scrollHeight;
-
-    // Create a new jsPDF instance with landscape orientation and A4 size
-    const pdf = new jsPDF("l", "pt", "a4");
+    const pdf = new jsPDF("p", "pt", "a4"); // Portrait orientation, A4 size
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
 
-    // Calculate scaling to fit content into the page dimensions
-    const scaleFactor = Math.min(
-      pdfWidth / contentWidth,
-      pdfHeight / contentHeight
-    );
-    const scaledWidth = contentWidth * scaleFactor;
-    const scaledHeight = contentHeight * scaleFactor;
+    const sections = document.querySelectorAll(".section-to-print"); // Target sections by class
 
-    // Convert the canvas to an image
-    const imageData = canvas.toDataURL("image/jpeg", 0.8); // JPEG format with compression
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i];
 
-    // Add the image to the PDF with scaled dimensions
-    const offsetX = (pdfWidth - scaledWidth) / 2; // Center horizontally
-    const offsetY = (pdfHeight - scaledHeight) / 2; // Center vertically
-    pdf.addImage(
-      imageData,
-      "JPEG",
-      offsetX,
-      offsetY,
-      scaledWidth,
-      scaledHeight
-    );
+      // Ensure each section is rendered fully
+      const canvas = await html2canvas(section, {
+        scale: 2, // High-quality rendering
+        useCORS: true,
+      });
+
+      const imgWidth = (pdfWidth * 8) / 9; // Fit to PDF width
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const imgData = canvas.toDataURL("image/png", 1.0);
+
+      // Add the image to a new page
+      if (i > 0) pdf.addPage();
+      pdf.addImage(
+        imgData,
+        "PNG",
+        30,
+        0,
+        imgWidth,
+        imgHeight > pdfHeight ? pdfHeight : imgHeight
+      );
+    }
 
     // Save the PDF
-    pdf.save(`${title}.pdf`);
+    pdf.save("Panel.pdf");
   };
 
   const handleCopyLink = () => {
@@ -115,20 +129,22 @@ const Header = ({
           mb: { md: 0, xs: 3 },
         }}
       >
+        {/* Logo */}
         <img
           src={logo}
           style={{
             width: "140px",
-            //   height: "120px",
             objectFit: "fit-content",
             padding: "5px",
           }}
         />
+
+        {/* Title */}
         <Tooltip title="Click to Add Title">
           {!isEditTitle ? (
             <Typography
               onClick={() => {
-                setSsEditTitle(true);
+                setIsEditTitle(true);
                 if (title === "CLICK HERE TO ADD PROJECT TITLE") {
                   setTitle("");
                 }
@@ -146,6 +162,7 @@ const Header = ({
             <Box display={"flex"} mt={{ md: 2, xs: 0 }} width={"50%"} gap={3}>
               <TextField
                 value={title || ""}
+                inputRef={textFieldRef} // Ref for detecting clicks outside
                 sx={{
                   ...textFieldStyle,
                   width: "100%",
@@ -153,19 +170,14 @@ const Header = ({
                   color: "white",
                 }}
                 variant="standard"
-                onBlur={handleTitleChange}
                 onChange={(e) => setTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    setSsEditTitle(false);
-                    handleTitleChange(title);
-                  }
-                }}
+                onBlur={handleTitleChange}
               />
             </Box>
           )}
         </Tooltip>
 
+        {/* Action Buttons */}
         <Box
           display={"flex"}
           gap={2}
@@ -218,13 +230,13 @@ const Header = ({
         </Box>
       </Box>
 
+      {/* Mobile Menu Icon */}
       <IconButton
         onClick={() => setSettings(!showSettings)}
         sx={{
           display: { xs: "block", md: "none" },
           position: "absolute",
-          // bgcolor: showSettings ? "black" : "black",
-          color: showSettings ? "#c0d144" : "#c0d144",
+          color: "#c0d144",
           top: 5,
           left: 5,
         }}

@@ -3,7 +3,7 @@ import { Box } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import React, { useEffect, useRef, useState } from "react";
 // import SaveIcon from "@mui/icons-material/Save";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "./components/Header";
 import Copyright from "./components/CopyRight";
@@ -29,6 +29,7 @@ export default function Panel({ parentId, panelid }) {
   const [title, setTitle] = useState("CLICK HERE TO ADD PROJECT TITLE");
   const [showSettings, setSettings] = useState(false);
   const [isCreate, setIsCreate] = useState(false);
+  const [isSectionCreated, setIsSectionCreated] = useState(false);
   const [sections, setSections] = useState([
     {
       product: "P 3.9",
@@ -45,8 +46,8 @@ export default function Panel({ parentId, panelid }) {
     },
   ]);
 
-  const baseURL = "https://api.screencalculator.in";
-  // const baseURL = "http://localhost:4000";
+  // const baseURL = "https://api.screencalculator.in";
+  const baseURL = "http://localhost:4000";
 
   let { Id } = useParams();
 
@@ -70,6 +71,7 @@ export default function Panel({ parentId, panelid }) {
   };
 
   const handleAddSection = () => {
+    setIsSectionCreated(true);
     setSections((prevSections) => [
       ...prevSections,
       {
@@ -86,9 +88,13 @@ export default function Panel({ parentId, panelid }) {
         activePanel: 15,
       },
     ]);
-
-    console.log(sections, "after the new section created");
   };
+
+  useEffect(() => {
+    if (isSectionCreated) {
+      createPanel(id, title, sections, parentId);
+    }
+  }, [isSectionCreated]);
 
   const handleSectionChange = (index, field, value) => {
     setSections((prevSections) => {
@@ -161,12 +167,16 @@ export default function Panel({ parentId, panelid }) {
         sections: filteredSections,
         parentId,
       });
-      setTitle(response?.data?.title);
+      // setTitle(response?.data?.title);
+
       await updateSectionsWithResponse(
         response?.data,
         setSections,
-        screenHeight
+        screenHeight,
+        setIsCreate
       );
+
+      setIsSectionCreated(false);
 
       if (Id) {
         setId(Id);
@@ -231,7 +241,12 @@ export default function Panel({ parentId, panelid }) {
 
         console.log(data, "from the fetch function");
 
-        await updateSectionsWithResponse(data, setSections, screenHeight);
+        await updateSectionsWithResponse(
+          data,
+          setSections,
+          screenHeight,
+          setIsCreate
+        );
 
         // Update IDs and navigation
         if (!Id && data.id) {
@@ -249,30 +264,24 @@ export default function Panel({ parentId, panelid }) {
     fetchData();
   }, [Id, id]);
 
-  const handleTitleChange = (newTitle) => {
-    setTitle(newTitle);
-    if (!title.trim()) {
-      toast.error(`Title can't be empty`);
-      return;
-    }
-
-    console.log(title, sections, "section while changing the title name");
+  const handleTitleChange = () => {
+    console.log(title);
     createPanel(id, title, sections, parentId);
   };
   return (
     <div>
-      <div ref={componentRef}>
+      <div ref={componentRef} className="section-to-print">
         <Grid
           container
           //   sx={{ minHeight: "100vh", minWidth: "100vw", background: "#fff" }}
         >
           <Header
-            componentRef={componentRef}
             setSettings={setSettings}
             showSettings={showSettings}
             title={title}
             setTitle={setTitle}
             handleTitleChange={handleTitleChange}
+            logo={logo}
           />
           {sections.map((section, index) => {
             return (
@@ -389,6 +398,7 @@ export default function Panel({ parentId, panelid }) {
           )}
         </Box>
       </Box>
+      <ToastContainer />
     </div>
   );
 }
