@@ -95,7 +95,7 @@ export default function PanelPlate({
         justifyContent={"center"}
         //   width={"98%"}
         flexDirection={"column"}
-        height={{ md: "85vh", xs: "60vh" }}
+        height={{ md: "68vh", xs: "60vh" }}
         maxHeight={{ md: "85vh", xs: "60vh" }}
         overflow={"hidden"}
         // bgcolor={"white"}

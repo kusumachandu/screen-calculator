@@ -56,13 +56,62 @@ const Header = ({
     toast.success("Page refreshed successfully");
   };
 
+  // const handlePrint = async () => {
+  //   const pdf = new jsPDF("p", "pt", "a4"); // Portrait orientation, A4 size
+  //   const pdfWidth = pdf.internal.pageSize.getWidth();
+  //   const pdfHeight = pdf.internal.pageSize.getHeight();
+
+  //   const sections = document.querySelectorAll(".section-to-print"); // Target sections by class
+
+  //   for (let i = 0; i < sections.length; i++) {
+  //     const section = sections[i];
+
+  //     // Ensure each section is rendered fully
+  //     const canvas = await html2canvas(section, {
+  //       scale: 2, // High-quality rendering
+  //       useCORS: true,
+  //     });
+
+  //     const imgWidth = (pdfWidth * 8) / 9; // Fit to PDF width
+  //     const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  //     const imgData = canvas.toDataURL("image/png", 1.0);
+
+  //     // Add the image to a new page
+  //     if (i > 0) pdf.addPage();
+  //     pdf.addImage(
+  //       imgData,
+  //       "PNG",
+  //       30,
+  //       0,
+  //       imgWidth,
+  //       imgHeight > pdfHeight ? pdfHeight : imgHeight
+  //     );
+  //   }
+
+  //   // Save the PDF
+  //   pdf.save(title);
+  // };
+
   const handlePrint = async () => {
     const pdf = new jsPDF("p", "pt", "a4"); // Portrait orientation, A4 size
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
+    const header = document.querySelector(".header-to-print"); // Select header
+    const sections = document.querySelectorAll(".section-to-print"); // Select sections
 
-    const sections = document.querySelectorAll(".section-to-print"); // Target sections by class
+    // Render the header first (spanning only the first page)
+    if (header) {
+      const canvas = await html2canvas(header, {
+        scale: 2, // High-quality rendering
+        useCORS: true,
+      });
 
+      const imgData = canvas.toDataURL("image/png", 1.0);
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight); // Stretch to fill entire page
+      pdf.addPage(); // Add a new page for subsequent content
+    }
+
+    // Render each section
     for (let i = 0; i < sections.length; i++) {
       const section = sections[i];
 
@@ -72,24 +121,19 @@ const Header = ({
         useCORS: true,
       });
 
-      const imgWidth = (pdfWidth * 8) / 9; // Fit to PDF width
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       const imgData = canvas.toDataURL("image/png", 1.0);
 
-      // Add the image to a new page
-      if (i > 0) pdf.addPage();
-      pdf.addImage(
-        imgData,
-        "PNG",
-        30,
-        0,
-        imgWidth,
-        imgHeight > pdfHeight ? pdfHeight : imgHeight
-      );
+      // Stretch the image to fill the full PDF page dimensions
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+      // Add a new page for the next section, unless it's the last section
+      if (i < sections.length - 1) {
+        pdf.addPage();
+      }
     }
 
     // Save the PDF
-    pdf.save("Panel.pdf");
+    pdf.save("output.pdf");
   };
 
   const handleCopyLink = () => {

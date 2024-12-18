@@ -97,6 +97,7 @@ export default function Panel({ parentId, panelid }) {
   }, [isSectionCreated]);
 
   const handleSectionChange = (index, field, value) => {
+    const conversionFactor = (unit) => (unit === "FT" ? 0.3048 : 1 / 0.3048);
     setSections((prevSections) => {
       const updatedSections = prevSections.map((section, secIndex) => {
         if (secIndex !== index) return section;
@@ -121,6 +122,16 @@ export default function Panel({ parentId, panelid }) {
             updatedSection.horizontal = Math.round(parsedValue * (16 / 9));
           } else if (section.ratio === "21:9") {
             updatedSection.horizontal = Math.round(parsedValue * (21 / 9));
+          }
+        } else if (field === "unit") {
+          // Convert values when the unit changes.
+          const newUnit = value;
+          console.log(newUnit, "new unit here");
+          if (newUnit !== section.unit) {
+            const factor = conversionFactor(section.unit);
+            updatedSection.horizontal = Math.round(section.horizontal * factor);
+            updatedSection.vertical = Math.round(section.vertical * factor);
+            updatedSection.unit = newUnit; // Update the unit.
           }
         } else {
           updatedSection[field] = value;
