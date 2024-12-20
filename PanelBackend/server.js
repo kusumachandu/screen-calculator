@@ -24,7 +24,6 @@ function calculateDimensions(input) {
     feetPanelSize;
   let panelsX, panelsY, totalPanels;
 
-  console.log(input, "input data from the response")
   
   const {
     product,
@@ -35,8 +34,8 @@ function calculateDimensions(input) {
     activePanel,
   } = input;
   
-  const horizontalValue = parseFloat(inputHorizontal) || 0;
-  const verticalValue = parseFloat(inputVertical) || 0;
+  const horizontalValue = (inputHorizontal) || 0;
+  const verticalValue = (inputVertical) || 0;
 
   if (!horizontalValue || !verticalValue) {
     console.error("Horizontal or vertical values are invalid:", {
@@ -232,13 +231,12 @@ if (product === "P 2.7") {
 }
 
 function roundToPanelSize(value, panelSize) {
-  return parseFloat(Math.round(value / panelSize) * panelSize).toFixed(2);
+  return ((value / panelSize) * panelSize).toFixed(2);
 }
 
 app.post("/", async (req, res) => {
   const { title, sections, id, parentId } = req.body;
 
-  console.log(req.body, "body from the clinet")
 
   let uniqueId = id;
 
@@ -258,8 +256,6 @@ app.post("/", async (req, res) => {
       return { ...section, error: "Invalid dimensions" };
     } 
 
-    console.log(section, "section data after the change in panel matrix ")
-
     const dimensions = calculateDimensions({
       product: section.product,
       unit: section.unit,
@@ -269,7 +265,6 @@ app.post("/", async (req, res) => {
       activePanel: section.activePanel,
     });
 
-    console.log(dimensions, "dimensions afte the calculation is done")
     return {
       ...section,
       ...dimensions,
@@ -292,7 +287,6 @@ app.post("/", async (req, res) => {
         if (dimensionRecord) {
           // Merge sections from database and request body
           const updatedSections = sections.map((section, index) => {
-            console.log(section, "updated sections when we add to database")
             if (dimensionRecord.sections[index]) {
               // Update existing section
               return {
@@ -314,11 +308,9 @@ app.post("/", async (req, res) => {
             }
           });
 
-          console.log(updatedSections, "updated section in the create function")
           dimensionRecord.title = title;
           dimensionRecord.sections = updatedSections;
           
-          console.log(dimensionRecord.sections,"dimensions record when we save")
           
           try {
             await dimensionRecord.save();
@@ -388,8 +380,6 @@ app.get("/:id", async (req, res) => {
         vertical: section.vertical,
         activePanel: section.activePanel,
       });
-
-      console.log(dimensions, "dimensions in the fetch data")
       // Transform the section to match the desired structure
       return {
         product: section.product,

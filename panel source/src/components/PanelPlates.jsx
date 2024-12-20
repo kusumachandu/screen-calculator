@@ -3,7 +3,7 @@ import { Box, TextField, Tooltip, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 export default function PanelPlate({
   panelX,
@@ -15,7 +15,6 @@ export default function PanelPlate({
   screenName,
   setScreenName,
   sectionIndex,
-  handleNameChange,
   panels,
   togglePanel,
   createPanel,
@@ -24,33 +23,71 @@ export default function PanelPlate({
   parentId,
   title,
 }) {
-  // console.log(panelData, "panel data in the panel plates");
-  // console.log(panels, "panels in the panelPlate");
   const generateBlackNoiseTexture = () => {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = 100;
-    canvas.height = 100;
+    // Create a small offscreen canvas to draw the pattern
+    const patternCanvas = document.createElement("canvas");
+    patternCanvas.width = 20;
+    patternCanvas.height = 20;
+    const pctx = patternCanvas.getContext("2d");
 
-    // Fill background with black
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Draw the pattern
+    pctx.fillStyle = "#131313";
+    pctx.fillRect(1.5, 0, 20, 20);
 
-    // Add noise (white specks)
-    for (let x = 0; x < canvas.width; x++) {
-      for (let y = 0; y < canvas.height; y++) {
-        if (Math.random() > 0.9) {
-          // Adjust density of noise
-          ctx.fillStyle = `rgba(255, 255, 255, ${Math.random()})`; // White specks
-          ctx.fillRect(x, y, 1, 1);
-        }
-      }
-    }
+    pctx.fillStyle = "#151515";
+    pctx.beginPath();
+    pctx.moveTo(0, 5);
+    pctx.lineTo(5, 0);
+    pctx.lineTo(10, 5);
+    pctx.lineTo(5, 10);
+    pctx.closePath();
+    pctx.fill();
 
-    return canvas.toDataURL();
+    pctx.fillStyle = "#222";
+    pctx.beginPath();
+    pctx.moveTo(10, 5);
+    pctx.lineTo(15, 0);
+    pctx.lineTo(20, 5);
+    pctx.lineTo(15, 10);
+    pctx.closePath();
+    pctx.fill();
+
+    pctx.fillStyle = "#1b1b1b";
+    pctx.fillRect(10, 20, 40, 5);
+
+    pctx.fillStyle = "#1d1d1d";
+    pctx.fillRect(0, 0, 30, 5);
+
+    // Use the pattern as the background
+    const pattern = pctx.createPattern(patternCanvas, "repeat");
+    pctx.fillStyle = pattern;
+    pctx.fillRect(0, 0, patternCanvas.width, patternCanvas.height);
+    return patternCanvas.toDataURL();
   };
 
   const noiseTexture = generateBlackNoiseTexture();
+
+  const textFieldRef = useRef(null);
+
+  const handleClickOutside = (event) => {
+    if (
+      textFieldRef.current && // Check if ref exists
+      !textFieldRef.current.contains(event.target) // Check if click is outside the ref
+    ) {
+      setName(false); // Exit editing mode
+    }
+  };
+
+  // Add and clean up the global event listener
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, []);
+
   return (
     <Grid size={{ sm: 12, md: 9, xs: 12 }} key={sectionIndex}>
       <Box
@@ -58,7 +95,7 @@ export default function PanelPlate({
         justifyContent={"center"}
         //   width={"98%"}
         flexDirection={"column"}
-        height={{ md: "85vh", xs: "60vh" }}
+        height={{ md: "68vh", xs: "60vh" }}
         maxHeight={{ md: "85vh", xs: "60vh" }}
         overflow={"hidden"}
         // bgcolor={"white"}
@@ -186,8 +223,8 @@ export default function PanelPlate({
                     value={screenName}
                     sx={{ width: "100%", textAlign: "center" }}
                     variant="standard"
-                    onChange={handleNameChange}
-                    onBlur={handleNameChange}
+                    onChange={setScreenName}
+                    // onBlur={() => setName(false)}
                   />{" "}
                   {/* <IconButton onClick={handleNameChange}>
                           <SaveIcon />
@@ -221,6 +258,7 @@ export default function PanelPlate({
                   return (
                     <Box
                       // border={"1px solid grey"}
+                      overflow={"hidden"}
                       key={`${rowIndex}-${colIndex}`}
                       sx={{
                         width: panelSize ? `${panelSize}px` : "50px",
@@ -248,32 +286,7 @@ export default function PanelPlate({
                           parentId
                         )
                       }
-                    >
-                      {/* <img
-                        style={{
-                          width: panelSize ? `${panelSize}px` : "50px",
-                          height: panelSize ? `${panelSize}px` : "50px",
-                          // border: "1px solid grey",
-                          objectFit: "cover",
-                          opacity: isPanelVisible ? 1 : 0,
-                          transition: "all 0.5s ease",
-                        }}
-                        src="/panel_image1.jpeg"
-                        alt="Panel"
-                      /> */}
-                      {/* <img
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          // border: "1px solid grey",
-                          objectFit: "cover",
-                          opacity: isPanelVisible ? 1 : 0,
-                          transition: "all 0.5s ease",
-                        }}
-                        src="/panel_image1.jpeg"
-                        alt="Panel"
-                      /> */}
-                    </Box>
+                    ></Box>
                   );
                 })}
               </React.Fragment>
@@ -303,7 +316,6 @@ export default function PanelPlate({
                 sx={{ cursor: "pointer" }}
               >
                 {screenName || "CLICK HERE TO ADD SCREEN NAME"}{" "}
-                {/* Display name or placeholder */}
               </Typography>
             ) : (
               <Box display="flex" mt={4} width="50%" gap={3}>
@@ -311,8 +323,9 @@ export default function PanelPlate({
                   value={screenName ? screenName : ""}
                   sx={{ width: "100%", textAlign: "center" }}
                   variant="standard"
-                  onChange={(e) => setScreenName(e.target.value)} // Update `screenName`
-                  onBlur={handleNameChange} // Save changes when input loses focus
+                  onChange={(e) => setScreenName(e.target.value)}
+                  onBlur={() => setName(false)}
+                  // ref={textFieldRef}
                 />
               </Box>
             )}

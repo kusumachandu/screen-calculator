@@ -75,14 +75,11 @@ export const togglePanelMatrixValue = (sectionIndex, rowIndex, columnIndex, setS
     const updatedSections = [...prevSections];
     const section = { ...updatedSections[sectionIndex] }; // Shallow copy of the target section
 
-    console.log(section, "section which we select")
-
     // Deep copy of the panelMatrix to avoid shared references
     const updatedPanelMatrix = section.panelMatrix.map((row) => [...row]);
 
     // Toggle the value of the specific cell
     updatedPanelMatrix[rowIndex][columnIndex] = !updatedPanelMatrix[rowIndex][columnIndex];
-    console.log(updatedPanelMatrix, "updated panel matrix")
 
     // Calculate the number of `true` panels
     const trueCount = updatedPanelMatrix.flat().filter((cell) => cell === true).length;
@@ -102,8 +99,6 @@ export const togglePanelMatrixValue = (sectionIndex, rowIndex, columnIndex, setS
     // Update the specific section in the sections array
     updatedSections[sectionIndex] = section;
 
-    // Optionally call a function to save or process the updated state
-    console.log(updatedSections, "updated sections after the panel matrix ")
     createPanel(id, title, updatedSections, parentId);
 
     return updatedSections; // Return the updated state

@@ -1,9 +1,9 @@
 /* eslint-disable react/prop-types */
 import { Box } from "@mui/material";
 import Grid from "@mui/material/Grid2";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 // import SaveIcon from "@mui/icons-material/Save";
-import { toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "./components/Header";
 import Copyright from "./components/CopyRight";
@@ -29,24 +29,25 @@ export default function Panel({ parentId, panelid }) {
   const [title, setTitle] = useState("CLICK HERE TO ADD PROJECT TITLE");
   const [showSettings, setSettings] = useState(false);
   const [isCreate, setIsCreate] = useState(false);
+  const [isSectionCreated, setIsSectionCreated] = useState(false);
   const [sections, setSections] = useState([
     {
       product: "P 3.9",
       unit: units[0].unit,
       ratio: "16:9",
-      horizontal: 10,
+      horizontal: 8,
       vertical: 4,
       panelMatrix: panelArray,
-      panelX: 6,
+      panelX: 5,
       panelY: 3,
       panelSize: 0,
       screenName: "",
-      activePanel: 18,
+      activePanel: 15,
     },
   ]);
 
-  const baseURL = "https://api.screencalculator.in";
- // const baseURL = "http://localhost:4000";
+  // const baseURL = "https://api.screencalculator.in";
+  const baseURL = "http://localhost:4000";
 
   let { Id } = useParams();
 
@@ -70,24 +71,33 @@ export default function Panel({ parentId, panelid }) {
   };
 
   const handleAddSection = () => {
+    setIsSectionCreated(true);
     setSections((prevSections) => [
       ...prevSections,
       {
-        product: "",
-        unit: "",
-        ratio: "",
-        horizontal: 0,
-        vertical: 0,
+        product: "P 3.9",
+        unit: units[0].unit,
+        ratio: "16:9",
+        horizontal: 8,
+        vertical: 4,
         panelMatrix: panelArray,
-        panelX: 0,
-        panelY: 0,
+        panelX: 5,
+        panelY: 3,
         panelSize: 0,
-        screenName: "",
+        screenName: "Click here to add a screen name",
+        activePanel: 15,
       },
     ]);
   };
 
+  useEffect(() => {
+    if (isSectionCreated) {
+      createPanel(id, title, sections, parentId);
+    }
+  }, [isSectionCreated]);
+
   const handleSectionChange = (index, field, value) => {
+    const conversionFactor = (unit) => (unit === "FT" ? 0.3048 : 1 / 0.3048);
     setSections((prevSections) => {
       const updatedSections = prevSections.map((section, secIndex) => {
         if (secIndex !== index) return section;
@@ -112,6 +122,16 @@ export default function Panel({ parentId, panelid }) {
             updatedSection.horizontal = Math.round(parsedValue * (16 / 9));
           } else if (section.ratio === "21:9") {
             updatedSection.horizontal = Math.round(parsedValue * (21 / 9));
+          }
+        } else if (field === "unit") {
+          // Convert values when the unit changes.
+          const newUnit = value;
+          console.log(newUnit, "new unit here");
+          if (newUnit !== section.unit) {
+            const factor = conversionFactor(section.unit);
+            updatedSection.horizontal = Math.round(section.horizontal * factor);
+            updatedSection.vertical = Math.round(section.vertical * factor);
+            updatedSection.unit = newUnit; // Update the unit.
           }
         } else {
           updatedSection[field] = value;
@@ -158,12 +178,16 @@ export default function Panel({ parentId, panelid }) {
         sections: filteredSections,
         parentId,
       });
-      setTitle(response?.data?.title);
+      // setTitle(response?.data?.title);
+
       await updateSectionsWithResponse(
         response?.data,
         setSections,
-        screenHeight
+        screenHeight,
+        setIsCreate
       );
+
+      setIsSectionCreated(false);
 
       if (Id) {
         setId(Id);
@@ -226,7 +250,14 @@ export default function Panel({ parentId, panelid }) {
 
         setTitle(data.title);
 
-        await updateSectionsWithResponse(data, setSections, screenHeight);
+        console.log(data, "from the fetch function");
+
+        await updateSectionsWithResponse(
+          data,
+          setSections,
+          screenHeight,
+          setIsCreate
+        );
 
         // Update IDs and navigation
         if (!Id && data.id) {
@@ -245,32 +276,25 @@ export default function Panel({ parentId, panelid }) {
   }, [Id, id]);
 
   const handleTitleChange = () => {
-    if (!title.trim()) {
-      toast.error(`Title can't be empty`);
-      return;
-    }
-
+    console.log(title);
     createPanel(id, title, sections, parentId);
   };
-
   return (
     <div>
-      <div ref={componentRef}>
-        <Grid
-          container
-          //   sx={{ minHeight: "100vh", minWidth: "100vw", background: "#fff" }}
-        >
+      <div ref={componentRef} className="section-to-print">
+        <Grid container>
           <Header
-            componentRef={componentRef}
             setSettings={setSettings}
             showSettings={showSettings}
             title={title}
             setTitle={setTitle}
             handleTitleChange={handleTitleChange}
+            logo={logo}
+            componentRef={componentRef}
           />
           {sections.map((section, index) => {
             return (
-              <React.Fragment key={index}>
+              <div key={index} style={{ width: "100%" }} className="section">
                 <Box
                   width={"100%"}
                   display={{ base: "none", md: "block", lg: "block" }}
@@ -321,30 +345,31 @@ export default function Panel({ parentId, panelid }) {
                     sections={sections}
                   />
                 </Box>
+                <div style={{ display: "flex" }}>
+                  <PanelPlate
+                    panelX={section.panelX}
+                    panelY={section.panelY}
+                    panelSize={section.panelSize}
+                    panelData={section}
+                    isName={isName}
+                    setName={setName}
+                    screenName={section.screenName}
+                    setScreenName={(value) =>
+                      handleSectionChange(index, "screenName", value)
+                    }
+                    sectionIndex={index}
+                    panels={section.panelMatrix}
+                    togglePanel={togglePanelMatrixValue}
+                    createPanel={createPanel}
+                    setSections={setSections}
+                    id={id}
+                    parentId={parentId}
+                    title={title}
+                  />
 
-                <PanelPlate
-                  panelX={section.panelX}
-                  panelY={section.panelY}
-                  panelSize={section.panelSize}
-                  panelData={section}
-                  isName={isName}
-                  setName={setName}
-                  screenName={section.screenName}
-                  setScreenName={(value) =>
-                    handleSectionChange(index, "screenName", value)
-                  }
-                  sectionIndex={index}
-                  panels={section.panelMatrix}
-                  togglePanel={togglePanelMatrixValue}
-                  createPanel={createPanel}
-                  setSections={setSections}
-                  id={id}
-                  parentId={parentId}
-                  title={title}
-                />
-
-                <TotalPanels panelData={section} />
-              </React.Fragment>
+                  <TotalPanels panelData={section} />
+                </div>
+              </div>
             );
           })}
         </Grid>
@@ -383,6 +408,7 @@ export default function Panel({ parentId, panelid }) {
           )}
         </Box>
       </Box>
+      <ToastContainer />
     </div>
   );
 }
