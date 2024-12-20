@@ -116,7 +116,7 @@ const Header = ({
         pdf.addImage(sectionImgData, "PNG", 0, 0, width, height);
       }
 
-      pdf.save("document.pdf");
+      pdf.save(title);
     } catch (error) {
       console.error("Error generating PDF:", error.message);
     }
