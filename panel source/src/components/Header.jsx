@@ -86,22 +86,31 @@ const Header = ({
         throw new Error("First section element not found.");
       }
 
-      console.log("Header found:", headerElement); // Debugging
-      console.log("First section found:", firstSection); // Debugging
-
-      // Capture the header
-      const headerCanvas = await html2canvas(headerElement, { scale: 2 });
-      const headerImgData = headerCanvas.toDataURL("image/png");
+      const headerCanvas = await html2canvas(headerElement, {
+        scale: 1,
+        useCORS: true,
+      });
+      const headerImgData = headerCanvas.toDataURL("image/jpeg", 0.75);
 
       // Capture the first section
-      const sectionCanvas = await html2canvas(firstSection, { scale: 2 });
-      const sectionImgData = sectionCanvas.toDataURL("image/png");
+      const sectionCanvas = await html2canvas(firstSection, {
+        scale: 1,
+        useCORS: true,
+      });
+      const sectionImgData = sectionCanvas.toDataURL("image/jpeg", 0.75);
 
       // Add the header to the first 20% of the page
-      pdf.addImage(headerImgData, "PNG", 0, 0, width, height * 0.1);
+      pdf.addImage(headerImgData, "jpeg", 0, 0, width, height * 0.1);
 
       // Add the first section to the remaining 80% of the page
-      pdf.addImage(sectionImgData, "PNG", 0, height * 0.2, width, height * 0.8);
+      pdf.addImage(
+        sectionImgData,
+        "jpeg",
+        0,
+        height * 0.2,
+        width,
+        height * 0.8
+      );
 
       // Process the remaining sections
       const sections = container.querySelectorAll(".section");
@@ -111,9 +120,9 @@ const Header = ({
 
       for (let i = 1; i < sections.length; i++) {
         const sectionCanvas = await html2canvas(sections[i], { scale: 2 });
-        const sectionImgData = sectionCanvas.toDataURL("image/png");
+        const sectionImgData = sectionCanvas.toDataURL("image/jpeg");
         pdf.addPage();
-        pdf.addImage(sectionImgData, "PNG", 0, 0, width, height);
+        pdf.addImage(sectionImgData, "jpeg", 0, 0, width, height);
       }
 
       pdf.save(title);
