@@ -21,6 +21,7 @@ const Header = ({
   setTitle,
   handleTitleChange,
   logo,
+  componentRef,
 }) => {
   const [isEditTitle, setIsEditTitle] = useState(false);
   const textFieldRef = useRef(null);
@@ -56,84 +57,69 @@ const Header = ({
     toast.success("Page refreshed successfully");
   };
 
-  // const handlePrint = async () => {
-  //   const pdf = new jsPDF("p", "pt", "a4"); // Portrait orientation, A4 size
-  //   const pdfWidth = pdf.internal.pageSize.getWidth();
-  //   const pdfHeight = pdf.internal.pageSize.getHeight();
-
-  //   const sections = document.querySelectorAll(".section-to-print"); // Target sections by class
-
-  //   for (let i = 0; i < sections.length; i++) {
-  //     const section = sections[i];
-
-  //     // Ensure each section is rendered fully
-  //     const canvas = await html2canvas(section, {
-  //       scale: 2, // High-quality rendering
-  //       useCORS: true,
-  //     });
-
-  //     const imgWidth = (pdfWidth * 8) / 9; // Fit to PDF width
-  //     const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  //     const imgData = canvas.toDataURL("image/png", 1.0);
-
-  //     // Add the image to a new page
-  //     if (i > 0) pdf.addPage();
-  //     pdf.addImage(
-  //       imgData,
-  //       "PNG",
-  //       30,
-  //       0,
-  //       imgWidth,
-  //       imgHeight > pdfHeight ? pdfHeight : imgHeight
-  //     );
-  //   }
-
-  //   // Save the PDF
-  //   pdf.save(title);
-  // };
-
   const handlePrint = async () => {
-    const pdf = new jsPDF("p", "pt", "a4"); // Portrait orientation, A4 size
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const header = document.querySelector(".header-to-print"); // Select header
-    const sections = document.querySelectorAll(".section-to-print"); // Select sections
+    const pdf = new jsPDF({
+      orientation: "landscape",
+      unit: "pt",
+      format: "a4",
+    });
+    const width = pdf.internal.pageSize.getWidth();
+    const height = pdf.internal.pageSize.getHeight();
 
-    // Render the header first (spanning only the first page)
-    if (header) {
-      const canvas = await html2canvas(header, {
-        scale: 2, // High-quality rendering
-        useCORS: true,
-      });
-
-      const imgData = canvas.toDataURL("image/png", 1.0);
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight); // Stretch to fill entire page
-      pdf.addPage(); // Add a new page for subsequent content
-    }
-
-    // Render each section
-    for (let i = 0; i < sections.length; i++) {
-      const section = sections[i];
-
-      // Ensure each section is rendered fully
-      const canvas = await html2canvas(section, {
-        scale: 2, // High-quality rendering
-        useCORS: true,
-      });
-
-      const imgData = canvas.toDataURL("image/png", 1.0);
-
-      // Stretch the image to fill the full PDF page dimensions
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-
-      // Add a new page for the next section, unless it's the last section
-      if (i < sections.length - 1) {
-        pdf.addPage();
+    try {
+      // Check if the main container is available
+      const container = componentRef?.current;
+      if (!container) {
+        throw new Error("Component reference is not found.");
       }
-    }
 
-    // Save the PDF
-    pdf.save("output.pdf");
+      console.log("Container found:", container); // Debugging
+
+      // Select the header and the first section
+      const headerElement = container.querySelector(".header");
+      const firstSection = container.querySelector(".section");
+
+      if (!headerElement) {
+        throw new Error("Header element not found.");
+      }
+      if (!firstSection) {
+        throw new Error("First section element not found.");
+      }
+
+      console.log("Header found:", headerElement); // Debugging
+      console.log("First section found:", firstSection); // Debugging
+
+      // Capture the header
+      const headerCanvas = await html2canvas(headerElement, { scale: 2 });
+      const headerImgData = headerCanvas.toDataURL("image/png");
+
+      // Capture the first section
+      const sectionCanvas = await html2canvas(firstSection, { scale: 2 });
+      const sectionImgData = sectionCanvas.toDataURL("image/png");
+
+      // Add the header to the first 20% of the page
+      pdf.addImage(headerImgData, "PNG", 0, 0, width, height * 0.1);
+
+      // Add the first section to the remaining 80% of the page
+      pdf.addImage(sectionImgData, "PNG", 0, height * 0.2, width, height * 0.8);
+
+      // Process the remaining sections
+      const sections = container.querySelectorAll(".section");
+      if (sections.length <= 1) {
+        console.warn("No additional sections found."); // Debugging
+      }
+
+      for (let i = 1; i < sections.length; i++) {
+        const sectionCanvas = await html2canvas(sections[i], { scale: 2 });
+        const sectionImgData = sectionCanvas.toDataURL("image/png");
+        pdf.addPage();
+        pdf.addImage(sectionImgData, "PNG", 0, 0, width, height);
+      }
+
+      pdf.save("document.pdf");
+    } catch (error) {
+      console.error("Error generating PDF:", error.message);
+    }
   };
 
   const handleCopyLink = () => {
@@ -161,7 +147,7 @@ const Header = ({
   };
 
   return (
-    <Grid size={12}>
+    <Grid size={12} className="header">
       <Box
         width={"100%"}
         sx={{

@@ -1,9 +1,9 @@
 /* eslint-disable react/prop-types */
 import { Box } from "@mui/material";
 import Grid from "@mui/material/Grid2";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 // import SaveIcon from "@mui/icons-material/Save";
-import { toast, ToastContainer } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "./components/Header";
 import Copyright from "./components/CopyRight";
@@ -282,10 +282,7 @@ export default function Panel({ parentId, panelid }) {
   return (
     <div>
       <div ref={componentRef} className="section-to-print">
-        <Grid
-          container
-          //   sx={{ minHeight: "100vh", minWidth: "100vw", background: "#fff" }}
-        >
+        <Grid container>
           <Header
             setSettings={setSettings}
             showSettings={showSettings}
@@ -293,10 +290,11 @@ export default function Panel({ parentId, panelid }) {
             setTitle={setTitle}
             handleTitleChange={handleTitleChange}
             logo={logo}
+            componentRef={componentRef}
           />
           {sections.map((section, index) => {
             return (
-              <React.Fragment key={index}>
+              <div key={index} style={{ width: "100%" }} className="section">
                 <Box
                   width={"100%"}
                   display={{ base: "none", md: "block", lg: "block" }}
@@ -347,30 +345,31 @@ export default function Panel({ parentId, panelid }) {
                     sections={sections}
                   />
                 </Box>
+                <div style={{ display: "flex" }}>
+                  <PanelPlate
+                    panelX={section.panelX}
+                    panelY={section.panelY}
+                    panelSize={section.panelSize}
+                    panelData={section}
+                    isName={isName}
+                    setName={setName}
+                    screenName={section.screenName}
+                    setScreenName={(value) =>
+                      handleSectionChange(index, "screenName", value)
+                    }
+                    sectionIndex={index}
+                    panels={section.panelMatrix}
+                    togglePanel={togglePanelMatrixValue}
+                    createPanel={createPanel}
+                    setSections={setSections}
+                    id={id}
+                    parentId={parentId}
+                    title={title}
+                  />
 
-                <PanelPlate
-                  panelX={section.panelX}
-                  panelY={section.panelY}
-                  panelSize={section.panelSize}
-                  panelData={section}
-                  isName={isName}
-                  setName={setName}
-                  screenName={section.screenName}
-                  setScreenName={(value) =>
-                    handleSectionChange(index, "screenName", value)
-                  }
-                  sectionIndex={index}
-                  panels={section.panelMatrix}
-                  togglePanel={togglePanelMatrixValue}
-                  createPanel={createPanel}
-                  setSections={setSections}
-                  id={id}
-                  parentId={parentId}
-                  title={title}
-                />
-
-                <TotalPanels panelData={section} />
-              </React.Fragment>
+                  <TotalPanels panelData={section} />
+                </div>
+              </div>
             );
           })}
         </Grid>
