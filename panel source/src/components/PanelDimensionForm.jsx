@@ -24,7 +24,6 @@ const PanelDimensionsForm = ({
   setSettings,
   sectionIndex,
   section,
-  sections,
 }) => {
   return (
     <React.Fragment key={sectionIndex}>
