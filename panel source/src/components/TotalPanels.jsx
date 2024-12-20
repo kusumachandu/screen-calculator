@@ -4,7 +4,7 @@ import Grid from "@mui/material/Grid2";
 
 const TotalPanels = ({ panelData, sectionIndex }) => {
   return (
-    <Grid size={{ md: 3, xs: 12 }} container>
+    <Grid size={{ md: 3, xs: 12 }} container pr={"16px"}>
       <Grid
         maxHeight={{ md: "fit-content", xs: "fit-content" }}
         overflow={"auto"}

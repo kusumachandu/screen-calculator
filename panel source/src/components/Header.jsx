@@ -87,14 +87,14 @@ const Header = ({
       }
 
       const headerCanvas = await html2canvas(headerElement, {
-        scale: 1,
+        scale: 2,
         useCORS: true,
       });
       const headerImgData = headerCanvas.toDataURL("image/jpeg", 0.75);
 
       // Capture the first section
       const sectionCanvas = await html2canvas(firstSection, {
-        scale: 1,
+        scale: 2,
         useCORS: true,
       });
       const sectionImgData = sectionCanvas.toDataURL("image/jpeg", 0.75);
@@ -107,9 +107,9 @@ const Header = ({
         sectionImgData,
         "jpeg",
         0,
-        height * 0.2,
+        height * 0.1,
         width,
-        height * 0.8
+        height * 0.9
       );
 
       // Process the remaining sections
