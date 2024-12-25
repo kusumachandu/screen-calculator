@@ -46,8 +46,8 @@ export default function Panel({ parentId, panelid }) {
     },
   ]);
 
-  const baseURL = "https://api.screencalculator.in";
-  //const baseURL = "http://localhost:4000";
+  // const baseURL = "https://api.screencalculator.in";
+  const baseURL = "http://localhost:4000";
 
   let { Id } = useParams();
 
@@ -345,7 +345,10 @@ export default function Panel({ parentId, panelid }) {
                     sections={sections}
                   />
                 </Box>
-                <div style={{ display: "flex" }}>
+                <Box
+                  display={{ base: "block", md: "flex" }}
+                  alignItems={"center"}
+                >
                   <PanelPlate
                     panelX={section.panelX}
                     panelY={section.panelY}
@@ -368,7 +371,7 @@ export default function Panel({ parentId, panelid }) {
                   />
 
                   <TotalPanels panelData={section} />
-                </div>
+                </Box>
               </div>
             );
           })}

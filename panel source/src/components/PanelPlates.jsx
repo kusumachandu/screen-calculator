@@ -93,16 +93,11 @@ export default function PanelPlate({
       <Box
         display={"flex"}
         justifyContent={"center"}
-        //   width={"98%"}
         flexDirection={"column"}
-        height={{ md: "68vh", xs: "60vh" }}
-        maxHeight={{ md: "85vh", xs: "60vh" }}
+        minHeight={{ md: "68vh", xs: "60vh" }}
+        // maxHeight={{ md: "85vh", xs: "60vh" }}
         overflow={"hidden"}
-        // bgcolor={"white"}
-        // borderRadius={10}
         alignItems={"center"}
-
-        //   gap={2}
       >
         <Box
           key={sectionIndex}
@@ -257,7 +252,6 @@ export default function PanelPlate({
                 {row?.map((isPanelVisible, colIndex) => {
                   return (
                     <Box
-                      // border={"1px solid grey"}
                       overflow={"hidden"}
                       key={`${rowIndex}-${colIndex}`}
                       sx={{
