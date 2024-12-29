@@ -46,7 +46,8 @@ export default function Panel({ parentId, panelid }) {
     },
   ]);
 
-  const baseURL = "https://api.screencalculator.in";
+  // const baseURL = "https://api.screencalculator.in";
+  const baseURL = "http://localhost:4000";
 
   let { Id } = useParams();
 
