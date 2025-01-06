@@ -135,20 +135,6 @@ const TotalPanels = ({ panelData, sectionIndex }) => {
             display={"flex"}
             justifyContent={"space-between"}
             alignItems={"center"}
-            mb={1}
-            px={2}
-          >
-            <Typography fontWeight={600} color="white">
-              Pixel Height
-            </Typography>
-            <Typography fontWeight={600} color="white">
-              {panelData?.pixelHeight}
-            </Typography>
-          </Box>
-          <Box
-            display={"flex"}
-            justifyContent={"space-between"}
-            alignItems={"center"}
             px={2}
             mb={1}
           >
@@ -157,6 +143,20 @@ const TotalPanels = ({ panelData, sectionIndex }) => {
             </Typography>
             <Typography fontWeight={600} color="white">
               {panelData?.pixelWidth}
+            </Typography>
+          </Box>
+          <Box
+            display={"flex"}
+            justifyContent={"space-between"}
+            alignItems={"center"}
+            mb={1}
+            px={2}
+          >
+            <Typography fontWeight={600} color="white">
+              Pixel Height
+            </Typography>
+            <Typography fontWeight={600} color="white">
+              {panelData?.pixelHeight}
             </Typography>
           </Box>
         </Box>
@@ -218,7 +218,7 @@ const TotalPanels = ({ panelData, sectionIndex }) => {
             //   borderBottom={"1px solid #303f9f"}
           >
             <Typography fontWeight={600} color="#c0d144">
-              220V Draw
+              230V Draw
             </Typography>
             <Typography fontWeight={600} color="#c0d144">
               {panelData?.totalAMPS}
