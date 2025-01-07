@@ -186,13 +186,13 @@ if (product === "P 2.7") {
   // For P 2.7, apply a different calculation for voltage if required.
   // You need to replace this with the actual voltage calculation for P 2.7
   totalAMPSkW = activePanel
-    ? `${(activePanel * power )/ 1000} KV` // Example calculation (this can be adjusted as needed)
-    : `${(totalPanels * power )/ 1000} KV`; // Adjust calculation for total panels if necessary
+    ? `${(activePanel * power )/ 1000} KVA` // Example calculation (this can be adjusted as needed)
+    : `${(totalPanels * power )/ 1000} KVA`; // Adjust calculation for total panels if necessary
 } else {
   // For all other products, the voltage is just the power (since 1A current is assumed).
   totalAMPSkW = activePanel
-    ? `${(activePanel * power)/ 1000} KV`
-    : `${(totalPanels * power)/ 1000} KV`;
+    ? `${(activePanel * power)/ 1000} KVA`
+    : `${(totalPanels * power)/ 1000} KVA`;
 }
 
 
@@ -403,7 +403,7 @@ app.get("/:id", async (req, res) => {
         diagonal: dimensions.diagonal || "0",
         processorPorts: dimensions.processorPorts || 0,
         totalAMPS: dimensions.totalAMPS || "0 W",
-        totalAMPSkW: dimensions.totalAMPSkW || "0 KV",
+        totalAMPSkW: dimensions.totalAMPSkW || "0 KVA",
         horizontalM: dimensions.horizontalM || "0 M",
         verticalM: dimensions.verticalM || "0 M",
         horizontalF: dimensions.horizontalF,

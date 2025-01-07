@@ -22,6 +22,7 @@ const Header = ({
   handleTitleChange,
   logo,
   componentRef,
+  setPrintMode,
 }) => {
   const [isEditTitle, setIsEditTitle] = useState(false);
   const textFieldRef = useRef(null);
@@ -58,74 +59,94 @@ const Header = ({
   };
 
   const handlePrint = async () => {
+    setPrintMode(true);
     const pdf = new jsPDF({
       orientation: "landscape",
       unit: "pt",
       format: "a4",
     });
-    const width = pdf.internal.pageSize.getWidth();
-    const height = pdf.internal.pageSize.getHeight();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
 
     try {
-      // Check if the main container is available
       const container = componentRef?.current;
       if (!container) {
         throw new Error("Component reference is not found.");
       }
 
-      console.log("Container found:", container); // Debugging
-
-      // Select the header and the first section
       const headerElement = container.querySelector(".header");
-      const firstSection = container.querySelector(".section");
+      const sections = container.querySelectorAll(".section");
 
-      if (!headerElement) {
-        throw new Error("Header element not found.");
-      }
-      if (!firstSection) {
-        throw new Error("First section element not found.");
-      }
+      if (!headerElement) throw new Error("Header element not found.");
+      if (sections.length === 0) throw new Error("No sections found.");
 
+      // Capture the header
       const headerCanvas = await html2canvas(headerElement, {
         scale: 2,
         useCORS: true,
       });
-      const headerImgData = headerCanvas.toDataURL("image/jpeg", 0.75);
+      const headerWidth = headerCanvas.width;
+      const headerHeight = headerCanvas.height;
+      const headerAspectRatio = headerWidth / headerHeight;
 
-      // Capture the first section
-      const sectionCanvas = await html2canvas(firstSection, {
-        scale: 2,
-        useCORS: true,
-      });
-      const sectionImgData = sectionCanvas.toDataURL("image/jpeg", 0.75);
-
-      // Add the header to the first 20% of the page
-      pdf.addImage(headerImgData, "jpeg", 0, 0, width, height * 0.1);
-
-      // Add the first section to the remaining 80% of the page
-      pdf.addImage(
-        sectionImgData,
-        "jpeg",
-        0,
-        height * 0.1,
-        width,
-        height * 0.9
+      console.log(
+        headerAspectRatio,
+        headerHeight,
+        headerWidth,
+        "header details"
       );
 
-      // Process the remaining sections
-      const sections = container.querySelectorAll(".section");
-      if (sections.length <= 1) {
-        console.warn("No additional sections found."); // Debugging
-      }
+      // Fit header to the top of the page
+      const headerRenderWidth = pageWidth;
+      const headerRenderHeight = headerRenderWidth / headerAspectRatio;
 
-      for (let i = 1; i < sections.length; i++) {
-        const sectionCanvas = await html2canvas(sections[i], { scale: 2 });
-        const sectionImgData = sectionCanvas.toDataURL("image/jpeg");
-        pdf.addPage();
-        pdf.addImage(sectionImgData, "jpeg", 0, 0, width, height);
+      const headerImgData = headerCanvas.toDataURL("image/jpeg", 0.75);
+      pdf.addImage(
+        headerImgData,
+        "jpeg",
+        0,
+        0,
+        headerRenderWidth,
+        headerRenderHeight
+      );
+
+      // Handle each section
+      for (let i = 0; i < sections.length; i++) {
+        const sectionCanvas = await html2canvas(sections[i], {
+          scale: 2,
+          useCORS: true,
+        });
+        const sectionWidth = sectionCanvas.width;
+        const sectionHeight = sectionCanvas.height;
+        const sectionAspectRatio = sectionWidth / sectionHeight;
+
+        // Calculate scaling to cover the entire page
+        let renderWidth = pageWidth;
+        let renderHeight = renderWidth / sectionAspectRatio;
+
+        // If height exceeds page height, adjust to fit height instead
+        if (renderHeight > pageHeight) {
+          renderHeight = pageHeight;
+          renderWidth = renderHeight * sectionAspectRatio;
+        }
+
+        // Center the section on the page
+        const xOffset = (pageWidth - renderWidth) / 2;
+        const yOffset = (pageHeight - renderHeight) / 2;
+
+        if (i > 0) pdf.addPage(); // Add a new page for subsequent sections
+        pdf.addImage(
+          sectionCanvas.toDataURL("image/jpeg", 0.75),
+          "jpeg",
+          xOffset,
+          yOffset,
+          renderWidth,
+          renderHeight
+        );
       }
 
       pdf.save(title);
+      setPrintMode(false);
     } catch (error) {
       console.error("Error generating PDF:", error.message);
     }

@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
-import { Box } from "@mui/material";
+import { Box, Card, Collapse, IconButton, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid2";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 // import SaveIcon from "@mui/icons-material/Save";
 import { ToastContainer } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
@@ -17,6 +17,7 @@ import PanelPlate from "./components/PanelPlates";
 import { togglePanelMatrixValue } from "./utils/togglePanelMatrix";
 import TotalPanels from "./components/TotalPanels";
 import PanelFormMobile from "./components/PanelFormMobile";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 export default function Panel({ parentId, panelid }) {
   const screenHeight = window.innerHeight / 2;
@@ -30,6 +31,7 @@ export default function Panel({ parentId, panelid }) {
   const [showSettings, setSettings] = useState(false);
   const [isCreate, setIsCreate] = useState(false);
   const [isSectionCreated, setIsSectionCreated] = useState(false);
+
   const [sections, setSections] = useState([
     {
       product: "P 3.9",
@@ -45,6 +47,14 @@ export default function Panel({ parentId, panelid }) {
       activePanel: 15,
     },
   ]);
+  const [expandedIndex, setExpandedIndex] = useState(0); // Default expanded index is 0
+  const [printMode, setPrintMode] = useState(false);
+
+  const handleCollapseChange = (index) => {
+    if (!printMode) {
+      setExpandedIndex(expandedIndex === index ? null : index);
+    }
+  };
 
   // const baseURL = "https://api.screencalculator.in";
   const baseURL = "http://localhost:4000";
@@ -84,7 +94,7 @@ export default function Panel({ parentId, panelid }) {
         panelX: 5,
         panelY: 3,
         panelSize: 0,
-        screenName: "Click here to add a screen name",
+        screenName: "",
         activePanel: 15,
       },
     ]);
@@ -279,6 +289,8 @@ export default function Panel({ parentId, panelid }) {
     console.log(title);
     createPanel(id, title, sections, parentId);
   };
+
+  console.log(expandedIndex, "expanded index");
   return (
     <div>
       <div ref={componentRef} className="section-to-print">
@@ -291,90 +303,140 @@ export default function Panel({ parentId, panelid }) {
             handleTitleChange={handleTitleChange}
             logo={logo}
             componentRef={componentRef}
+            setPrintMode={setPrintMode}
           />
-          {sections.map((section, index) => {
-            return (
-              <div key={index} style={{ width: "100%" }} className="section">
-                <Box
-                  width={"100%"}
-                  display={{ base: "none", md: "block", lg: "block" }}
-                >
-                  <PanelDimensionsForm
-                    handleProductChange={(e) =>
-                      handleSectionChange(index, "product", e.target.value)
-                    }
-                    handleUnitChange={(e) =>
-                      handleSectionChange(index, "unit", e.target.value)
-                    }
-                    handleRatioChange={(e) =>
-                      handleSectionChange(index, "ratio", e.target.value)
-                    }
-                    handleHorizontalChange={(e) =>
-                      handleSectionChange(index, "horizontal", e.target.value)
-                    }
-                    handleVerticalChange={(e) =>
-                      handleSectionChange(index, "vertical", e.target.value)
-                    }
-                    setSettings={setSettings}
-                    showSettings={showSettings}
-                    sectionIndex={index}
-                    section={section}
-                  />
-                </Box>
-                <Box display={{ base: "block", md: "none" }}>
-                  <PanelFormMobile
-                    handleProductChange={(e) =>
-                      handleSectionChange(index, "product", e.target.value)
-                    }
-                    handleUnitChange={(e) =>
-                      handleSectionChange(index, "unit", e.target.value)
-                    }
-                    handleRatioChange={(e) =>
-                      handleSectionChange(index, "ratio", e.target.value)
-                    }
-                    handleHorizontalChange={(e) =>
-                      handleSectionChange(index, "horizontal", e.target.value)
-                    }
-                    handleVerticalChange={(e) =>
-                      handleSectionChange(index, "vertical", e.target.value)
-                    }
-                    setSettings={setSettings}
-                    showSettings={showSettings}
-                    sectionIndex={index}
-                    section={section}
-                    sections={sections}
-                  />
-                </Box>
-                <Box
-                  display={{ base: "block", md: "flex" }}
-                  alignItems={"center"}
-                >
-                  <PanelPlate
-                    panelX={section.panelX}
-                    panelY={section.panelY}
-                    panelSize={section.panelSize}
-                    panelData={section}
-                    isName={isName}
-                    setName={setName}
-                    screenName={section.screenName}
-                    setScreenName={(value) =>
-                      handleSectionChange(index, "screenName", value)
-                    }
-                    sectionIndex={index}
-                    panels={section.panelMatrix}
-                    togglePanel={togglePanelMatrixValue}
-                    createPanel={createPanel}
-                    setSections={setSections}
-                    id={id}
-                    parentId={parentId}
-                    title={title}
-                  />
 
-                  <TotalPanels panelData={section} />
+          <React.Fragment>
+            {sections.map((section, index) => (
+              <Card
+                id={`panel${index}-header`}
+                key={index}
+                sx={{ marginBottom: 2, width: "100%" }}
+              >
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  sx={{
+                    cursor: "pointer",
+                    padding: "16px",
+                    backgroundColor:
+                      expandedIndex === index ? "#f5f5f5" : "white",
+                    borderBottom:
+                      expandedIndex === index ? "1px solid #ccc" : "none",
+                  }}
+                  onClick={() => handleCollapseChange(index)}
+                >
+                  <Typography variant="h6">
+                    {section.screenName || "Section"} - {index + 1}
+                  </Typography>
+                  <IconButton size="small">
+                    <ExpandMoreIcon
+                      sx={{
+                        transform:
+                          expandedIndex === index
+                            ? "rotate(180deg)"
+                            : "rotate(0deg)",
+                        transition: "transform 0.3s",
+                      }}
+                    />
+                  </IconButton>
                 </Box>
-              </div>
-            );
-          })}
+                <Collapse
+                  in={expandedIndex === index || printMode}
+                  timeout="auto"
+                >
+                  <Box sx={{ padding: "16px" }} className="section">
+                    <Box
+                      width={"100%"}
+                      display={{ xs: "none", md: "block", lg: "block" }}
+                    >
+                      <PanelDimensionsForm
+                        handleProductChange={(e) =>
+                          handleSectionChange(index, "product", e.target.value)
+                        }
+                        handleUnitChange={(e) =>
+                          handleSectionChange(index, "unit", e.target.value)
+                        }
+                        handleRatioChange={(e) =>
+                          handleSectionChange(index, "ratio", e.target.value)
+                        }
+                        handleHorizontalChange={(e) =>
+                          handleSectionChange(
+                            index,
+                            "horizontal",
+                            e.target.value
+                          )
+                        }
+                        handleVerticalChange={(e) =>
+                          handleSectionChange(index, "vertical", e.target.value)
+                        }
+                        setSettings={setSettings}
+                        showSettings={showSettings}
+                        sectionIndex={index}
+                        section={section}
+                      />
+                    </Box>
+                    <Box display={{ xs: "block", md: "none" }}>
+                      <PanelFormMobile
+                        handleProductChange={(e) =>
+                          handleSectionChange(index, "product", e.target.value)
+                        }
+                        handleUnitChange={(e) =>
+                          handleSectionChange(index, "unit", e.target.value)
+                        }
+                        handleRatioChange={(e) =>
+                          handleSectionChange(index, "ratio", e.target.value)
+                        }
+                        handleHorizontalChange={(e) =>
+                          handleSectionChange(
+                            index,
+                            "horizontal",
+                            e.target.value
+                          )
+                        }
+                        handleVerticalChange={(e) =>
+                          handleSectionChange(index, "vertical", e.target.value)
+                        }
+                        handleCollapseChange={handleCollapseChange}
+                        expandedIndex={expandedIndex}
+                        setSettings={setSettings}
+                        showSettings={showSettings}
+                        sectionIndex={index}
+                        sections={sections}
+                      />
+                    </Box>
+                    <Box
+                      display={{ xs: "block", md: "flex" }}
+                      alignItems={"center"}
+                    >
+                      <PanelPlate
+                        panelX={section.panelX}
+                        panelY={section.panelY}
+                        panelSize={section.panelSize}
+                        panelData={section}
+                        isName={isName}
+                        setName={setName}
+                        screenName={section.screenName}
+                        setScreenName={(value) =>
+                          handleSectionChange(index, "screenName", value)
+                        }
+                        sectionIndex={index}
+                        panels={section.panelMatrix}
+                        togglePanel={togglePanelMatrixValue}
+                        createPanel={createPanel}
+                        setSections={setSections}
+                        id={id}
+                        parentId={parentId}
+                        title={title}
+                      />
+                      <TotalPanels panelData={section} />
+                    </Box>
+                  </Box>
+                </Collapse>
+              </Card>
+            ))}
+          </React.Fragment>
         </Grid>
         <Copyright />
       </div>
@@ -406,7 +468,7 @@ export default function Panel({ parentId, panelid }) {
                 backgroundColor: "orange",
               }}
             >
-              Create New
+              Add New
             </button>
           )}
         </Box>
